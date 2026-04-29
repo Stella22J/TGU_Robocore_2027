@@ -1,3 +1,9 @@
+/**
+ * @file pid.hpp
+ * @brief PID 控制器接口声明。
+ * @namespace tools
+ */
+
 #ifndef TOOLS__PID_HPP
 #define TOOLS__PID_HPP
 

@@ -1,3 +1,13 @@
+/**
+ * @file thread_pool.hpp
+ * @brief 多线程任务池与帧保序队列工具。
+ *
+ * 本文件定义 Frame 数据结构、YOLO 实例批量创建函数、OrderedQueue 保序队列以及 ThreadPool 线程池。
+ * 主要用于提供线程池、按帧 ID 保序输出队列，以及 YOLO 实例批量创建工具；服务于多线程图像推理或自瞄流水线。
+ *
+ * @namespace tools
+ */
+
 #ifndef TOOLS__THREAD_POOL_HPP
 #define TOOLS__THREAD_POOL_HPP
 

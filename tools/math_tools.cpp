@@ -1,3 +1,14 @@
+/**
+ * @file math_tools.cpp
+ * @brief 常用数学与几何工具函数实现。
+ *
+ * 本文件实现机器人感知与控制中常用的数学工具函数，包括角度归一化、四元数
+ * 与欧拉角转换、旋转矩阵生成、直角坐标系与 yaw-pitch-distance 坐标系转换、
+ * 坐标变换雅可比矩阵、时间差计算、向量夹角计算和数值限幅等。
+ *
+ * @namespace tools
+ */
+
 #include "math_tools.hpp"
 
 #include <cmath>

@@ -1,6 +1,8 @@
-//
-// Created by Interweave on 2026/4/14.
-//
+/**
+ * @file foxglove_comm.hpp
+ * @brief Foxglove WebSocket 通信封装接口声明。
+ * @namespace tools
+ */
 
 #ifndef TGU_ROBOCORE_2027_FOXGLOVE_COMM_HPP
 #define TGU_ROBOCORE_2027_FOXGLOVE_COMM_HPP

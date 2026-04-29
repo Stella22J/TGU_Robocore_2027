@@ -1,3 +1,9 @@
+/**
+ * @file extended_kalman_filter.hpp
+ * @brief 扩展卡尔曼滤波器接口声明。
+ * @namespace tools
+ */
+
 #ifndef TOOLS__EXTENDED_KALMAN_FILTER_HPP
 #define TOOLS__EXTENDED_KALMAN_FILTER_HPP
 

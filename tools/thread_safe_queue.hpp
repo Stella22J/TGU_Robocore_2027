@@ -1,3 +1,14 @@
+/**
+* @file thread_safe_queue.hpp
+ * @brief 通用线程安全有界队列模板。
+ *
+ * 本文件定义 ThreadSafeQueue 模板类，基于 mutex 和 condition_variable 实现
+ * 多线程安全的 push、pop、front、back、empty 和 clear 操作。
+ * 主要用于线程安全有界队列，支持阻塞弹出、队列满时丢弃或回调处理。
+ *
+ * @namespace tools
+ */
+
 #ifndef TOOLS__THREAD_SAFE_QUEUE_HPP
 #define TOOLS__THREAD_SAFE_QUEUE_HPP
 

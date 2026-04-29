@@ -1,3 +1,9 @@
+/**
+ * @file crc.hpp
+ * @brief CRC8/CRC16 校验算法接口声明。
+ * @namespace tools
+ */
+
 #ifndef TOOLS__CRC_HPP
 #define TOOLS__CRC_HPP
 

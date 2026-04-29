@@ -1,3 +1,9 @@
+/**
+ * @file logger.hpp
+ * @brief 全局日志器接口声明。
+ * @namespace tools
+ */
+
 #ifndef TOOLS__LOGGER_HPP
 #define TOOLS__LOGGER_HPP
 

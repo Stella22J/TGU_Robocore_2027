@@ -1,3 +1,15 @@
+/**
+ * @file recorder.cpp
+ * @brief 图像帧与姿态数据记录器实现。
+ *
+ * 本文件实现 Recorder 类，用于按指定帧率异步保存图像帧和对应姿态四元数。
+ * 记录器会在 records 目录下生成视频文件和文本文件，视频保存图像序列，
+ * 文本文件按时间戳记录对应的四元数姿态数据。
+ * 主要用于视觉算法回放、调试取证、姿态估计验证和运行数据留存。
+ *
+ * @namespace tools
+ */
+
 #include "recorder.hpp"
 
 #include <fmt/chrono.h>

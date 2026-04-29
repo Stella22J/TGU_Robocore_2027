@@ -1,3 +1,12 @@
+/**
+ * @file exiter.cpp
+ * @brief 程序退出信号处理工具实现。
+ *
+ * 本文件实现 Exiter 类，用于捕获 SIGINT 信号并设置全局退出标志。
+ *
+ * @namespace tools
+ */
+
 #include "exiter.hpp"
 
 #include <csignal>

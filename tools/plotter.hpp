@@ -1,3 +1,9 @@
+/**
+ * @file plotter.hpp
+ * @brief UDP 绘图数据发送器接口声明。
+ * @namespace tools
+ */
+
 #ifndef TOOLS__PLOTTER_HPP
 #define TOOLS__PLOTTER_HPP
 

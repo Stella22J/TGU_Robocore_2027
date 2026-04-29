@@ -1,3 +1,12 @@
+/**
+ * @file logger.cpp
+ * @brief 全局日志器实现。
+ *
+ * 本文件基于 spdlog 创建并维护一个全局 logger 实例，支持控制台彩色输出和文件日志输出。
+ *
+ * @namespace tools
+ */
+
 #include "logger.hpp"
 
 #include <fmt/chrono.h>

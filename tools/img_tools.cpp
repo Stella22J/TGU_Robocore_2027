@@ -1,3 +1,13 @@
+/**
+ * @file img_tools.cpp
+ * @brief OpenCV 图像绘制工具函数实现。
+ *
+ * 本文件实现图像调试绘制函数，包括绘制单点、点集轮廓和文本。
+ * 主要用于视觉算法调试、检测结果可视化、图像标注和运行状态显示。
+ *
+ * @namespace tools
+ */
+
 #include "img_tools.hpp"
 
 namespace tools {

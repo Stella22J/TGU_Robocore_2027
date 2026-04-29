@@ -1,3 +1,13 @@
+/**
+ * @file crc.cpp
+ * @brief CRC8/CRC16 校验算法实现。
+ *
+ * 本文件提供基于查表法的 CRC8 与 CRC16 计算函数，并提供带校验位数据帧的
+ * CRC 校验接口。主要用于通信数据包、传感器数据帧或嵌入式协议中的数据完整性校验。
+ *
+ * @namespace tools
+ */
+
 #include "crc.hpp"
 
 constexpr uint8_t CRC8_INIT = 0xff;

@@ -1,3 +1,9 @@
+/**
+ * @file trajectory.hpp
+ * @brief 抛体弹道解算接口声明。
+ * @namespace tools
+ */
+
 #ifndef TOOLS__TRAJECTORY_HPP
 #define TOOLS__TRAJECTORY_HPP
 

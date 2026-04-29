@@ -1,3 +1,12 @@
+/**
+ * @file pid.cpp
+ * @brief PID 控制器实现。
+ *
+ * 本文件实现 PID 类的控制量计算逻辑，包括比例项、积分项和微分项计算。
+ *
+ * @namespace tools
+ */
+
 #include "pid.hpp"
 
 #include "math_tools.hpp"

@@ -1,3 +1,9 @@
+/**
+ * @file math_tools.hpp
+ * @brief 常用数学与几何工具函数接口声明。
+ * @namespace tools
+ */
+
 #ifndef TOOLS__MATH_TOOLS_HPP
 #define TOOLS__MATH_TOOLS_HPP
 

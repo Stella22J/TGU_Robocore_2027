@@ -1,3 +1,9 @@
+/**
+ * @file recorder.hpp
+ * @brief 图像帧与姿态数据记录器接口声明。
+ * @namespace tools
+ */
+
 #ifndef TOOLS__RECORDER_HPP
 #define TOOLS__RECORDER_HPP
 

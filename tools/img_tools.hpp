@@ -1,3 +1,9 @@
+/**
+ * @file img_tools.hpp
+ * @brief OpenCV 图像绘制工具函数接口声明。、
+ * @namespace tools
+ */
+
 #ifndef TOOLS__IMG_TOOLS_HPP
 #define TOOLS__IMG_TOOLS_HPP
 

@@ -1,4 +1,8 @@
-#pragma once
+/**
+ * @file ransac_sine_fitter.hpp
+ * @brief 基于 RANSAC 的正弦曲线拟合接口声明。
+ * @namespace tools
+ */
 
 #include <Eigen/Dense>
 #include <deque>
