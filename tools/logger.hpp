@@ -3,10 +3,9 @@
 
 #include <spdlog/spdlog.h>
 
-namespace tools
-{
+namespace tools {
 std::shared_ptr<spdlog::logger> logger();
 
-}  // namespace tools
+} // namespace tools
 
-#endif  // TOOLS__LOGGER_HPP
+#endif // TOOLS__LOGGER_HPP
