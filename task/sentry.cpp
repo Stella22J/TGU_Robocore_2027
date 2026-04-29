@@ -45,7 +45,7 @@ int main(int argc, char * argv[])
   io::ROS2 ros2;
   io::CBoard cboard(config_path);
   io::Camera camera(config_path);
-  io::Camera back_camera("configs/camera.yaml");
+  io::Camera back_camera("configs/camera.toml");
   io::USBCamera usbcam1("video0", config_path);
   io::USBCamera usbcam2("video2", config_path);
 

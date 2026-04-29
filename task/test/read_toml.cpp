@@ -9,7 +9,7 @@
 
 int main() {
     std::cout << std::setprecision(17);
-    auto config = toml::parse_file("../../config/testconfig.toml");
+    auto config = toml::parse_file("../../config/testconfig.toml.bak");
 
     std::string title = config["title"].value_or("default");
 

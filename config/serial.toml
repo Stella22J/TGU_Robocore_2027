@@ -1,0 +1,7 @@
+#####-----cboard参数-----#####
+quaternion_canid = 0x01
+bullet_speed_canid = 0x101
+send_canid = 0xff
+can_interface = "can0"
+
+#TODO
