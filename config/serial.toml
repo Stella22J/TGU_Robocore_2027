@@ -1,4 +1,5 @@
 #####-----cboard参数-----#####
+[cborad]
 quaternion_canid = 0x01
 bullet_speed_canid = 0x101
 send_canid = 0xff

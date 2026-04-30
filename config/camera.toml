@@ -1,4 +1,5 @@
 #####-----相机参数-----######
+[camera]
 camera_name = "hikrobot"
 exposure_ms = 5
 gain = 10.0
