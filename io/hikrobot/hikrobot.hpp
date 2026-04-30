@@ -5,7 +5,7 @@
  * @file hikrobot.hpp
  * @brief HikRobot工业相机驱动类声明。
  *
- * 本文件声明了HikRobot相机封装类，用于通过 HikRobot MVS SDK控制 USB 工业相机，并向上层提供统一的
+ * 本文件声明了HikRobot相机封装类，用于通过HikRobot MVS SDK控制USB工业相机，并向上层提供统一的
  * CameraBase 读取接口。
  *
  * @namespace io
@@ -24,12 +24,12 @@
 namespace io {
 
 /**
- * @brief HikRobot USB 工业相机驱动类。
+ * @brief HikRobot USB工业相机驱动类。
  *
  * 该类继承自CameraBase，对HikRobot MVS SDK进行封装。
  * 类内部包含两类后台线程：
- * - daemon_thread_：守护线程，负责启动采集、监控采集状态，并在异常时重启相机；
- * - capture_thread_：采集线程，负责从相机 SDK 获取图像并写入队列。
+ * - daemon_thread_：守护线程，负责启动采集、监控采集状态，并在异常时重启相机
+ * - capture_thread_：采集线程，负责从相机 SDK 获取图像并写入队列
  * 外部模块通过 read() 接口阻塞式读取最新图像和对应时间戳。
  */
 class HikRobot : public CameraBase {
@@ -38,7 +38,7 @@ class HikRobot : public CameraBase {
      * @brief 构造 HikRobot 相机对象。
      * @param exposure_ms 曝光时间，单位：毫秒。
      * @param gain 相机增益。
-     * @param vid_pid USB 设备 VID/PID 字符串
+     * @param vid_pid USB设备VID/PID字符串
      */
     HikRobot(double exposure_ms, double gain, const std::string& vid_pid);
 
@@ -119,14 +119,14 @@ class HikRobot : public CameraBase {
     void set_enum_value(const std::string& name, unsigned int value);
 
     /**
-     * @brief 解析USB、VID/PID字符串。
+     * @brief 解析USB VID/PID字符串。
      *
      * 输入格式应为十六进制字符串：
      * @code
      * "VID:PID"
      * @endcode
      *
-     * @param vid_pid USB、VID/PID字符串。
+     * @param vid_pid USB VID/PID字符串。
      */
     void set_vid_pid(const std::string& vid_pid);
 

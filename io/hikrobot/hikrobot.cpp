@@ -6,7 +6,7 @@
  *
  * 程序整体流程：
  * 1. 构造HikRobot对象
- * 2. 解析USB、VID/PID
+ * 2. 解析USB VID/PID
  * 3. 初始化libusb
  * 4. 启动守护线程daemon_thread_
  * 5. 守护线程调用capture_start() 启动相机
@@ -15,6 +15,8 @@
  * 8. 将Bayer图像转换为RGB图像
  * 9. 将图像和时间戳写入线程安全队列
  * 10. 若采集线程异常退出，守护线程会尝试stop、reset、restart
+ *
+ *@namespace io
  */
 
 #include "hikrobot.hpp"
@@ -31,7 +33,7 @@ namespace io {
 HikRobot::HikRobot(double exposure_ms, double gain, const std::string& vid_pid)
     : exposure_us_(exposure_ms * 1e3), gain_(gain), queue_(1), daemon_quit_(false), vid_(-1),
       pid_(-1) {
-    // 解析USB、VID/PID，用于reset_usb()。
+    // 解析USB VID/PID，用于reset_usb()。
     set_vid_pid(vid_pid);
 
     // 初始化libusb。用于reset_usb()。
