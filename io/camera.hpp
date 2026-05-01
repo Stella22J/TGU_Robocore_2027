@@ -57,8 +57,8 @@ class Camera {
 
     /**
      * @brief 读取一帧图像及其时间戳
-     * @param[out] img输出图像
-     * @param[out] timestamp图像对应时间戳
+     * @param img 输出图像
+     * @param timestamp 图像对应时间戳
      */
     void read(cv::Mat& img, std::chrono::steady_clock::time_point& timestamp);
 

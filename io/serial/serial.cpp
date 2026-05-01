@@ -32,11 +32,11 @@ namespace io {
                 boost::asio::serial_port_base::flow_control::none));
 
             is_open_ = true;
-            LOG_INFO(MODULE, "{} open success", device);
+            tools::logger()->info("[{}] {} open success", MODULE, device);
             return true;
 
         } catch (std::exception& e) {
-            LOG_ERROR(MODULE,"{} open failed: {}", device, e.what());
+            tools::logger()->error("[{}] {} open failed: {}", MODULE, device, e.what());
             is_open_ = false;
             return false;
         }
@@ -59,6 +59,18 @@ namespace io {
         try {
             return boost::asio::write(serial_, boost::asio::buffer(data, size));
         } catch (...) {
+            is_open_ = false;
+            return 0;
+        }
+    }
+
+size_t Serial::read(uint8_t* data, size_t size) {
+        if (!is_open_) return 0;
+
+        try {
+            return boost::asio::read(serial_, boost::asio::buffer(data, size));
+        } catch (const std::exception& e) {
+            tools::logger()->error("[{}] read failed: {}", MODULE, e.what());
             is_open_ = false;
             return 0;
         }

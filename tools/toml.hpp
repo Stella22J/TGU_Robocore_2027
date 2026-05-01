@@ -33,7 +33,8 @@ inline toml::table load(const std::string & path)
           "[TOML] Source: {}",
           path,
           e.description(),
-          e.source().begin);
+          e.source().begin.line,
+          e.source().begin.column);
         exit(1);
     }
 }

@@ -37,7 +37,7 @@ IMU::IMU() : queue_(5000)
   init_serial();
 
   // 启动后台线程，持续从串口读取 IMU 数据。
-  rec_thread_ = std::thread(&DM_IMU::get_imu_data_thread, this);
+  rec_thread_ = std::thread(&IMU::get_imu_data_thread, this);
 
   // 预取两帧数据，用于后续 imu_at() 的时间插值。
   queue_.pop(data_ahead_);
@@ -57,51 +57,28 @@ IMU::~IMU()
   }
 
   // 关闭串口
-  if (serial_.isOpen()) {
+  if (serial_.is_open()) {
     serial_.close();
   }
 }
 
 void IMU::init_serial()
 {
-  try {
-    // 串口设备路径
-    serial_.setPort("/dev/ttyACM0");
-
-    // IMU通信波特率
-    serial_.setBaudrate(921600);
-
-    // 串口通信参数：无流控、无校验、1位停止位、8位数据位
-    serial_.setFlowcontrol(serial::flowcontrol_none);
-    serial_.setParity(serial::parity_none);
-    serial_.setStopbits(serial::stopbits_one);
-    serial_.setBytesize(serial::eightbits);
-
-    // 设置串口读取超时时间
-    serial::Timeout time_out = serial::Timeout::simpleTimeout(20);
-    serial_.setTimeout(time_out);
-
-    // 打开串口
-    serial_.open();
+    if (!serial_.open("/dev/ttyACM0", 921600)) {
+        tools::logger()->warn("[IMU] failed to open serial port");
+        exit(0);
+    }
 
     // 等待 IMU 或串口设备稳定
     usleep(1000000);
 
     tools::logger()->info("[IMU] serial port opened");
-  }
-
-  catch (serial::IOException & e) {
-    tools::logger()->warn("[IMU] failed to open serial port ");
-
-    // 串口打开失败退出程序
-    exit(0);
-  }
 }
 
 void IMU::get_imu_data_thread()
 {
   while (!stop_thread_) {
-    if (!serial_.isOpen()) {
+    if (!serial_.is_open()) {
       tools::logger()->warn("In get_imu_data_thread, imu serial port unopen");
     }
 
@@ -164,7 +141,7 @@ void IMU::get_imu_data_thread()
   }
 }
 
-Eigen::Quaterniond DM_IMU::imu_at(std::chrono::steady_clock::time_point timestamp)
+Eigen::Quaterniond IMU::imu_at(std::chrono::steady_clock::time_point timestamp)
 {
   // 如果当前后一帧仍然早于目标时间，则推进前一帧
   if (data_behind_.timestamp < timestamp) data_ahead_ = data_behind_;

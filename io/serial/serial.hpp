@@ -106,6 +106,7 @@ public:
     bool is_open() const;
 
     size_t write(const uint8_t* data, size_t size);
+    size_t read(uint8_t* data, size_t size);
 
     template<typename T>
     size_t send(const T& data) {

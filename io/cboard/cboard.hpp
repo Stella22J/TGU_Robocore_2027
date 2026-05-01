@@ -18,8 +18,8 @@
 #include <string>
 #include <vector>
 
-#include "io/command.hpp"
-#include "io/socketcan.hpp"
+#include "command.hpp"
+#include "socketcan.hpp"
 #include "tools/logger.hpp"
 #include "tools/thread_safe_queue.hpp"
 

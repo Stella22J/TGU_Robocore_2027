@@ -14,7 +14,7 @@
  */
 
 #include <math.h>
-#include <serial/serial.h>
+#include "serial/serial.hpp"
 
 #include <Eigen/Geometry>
 #include <array>
@@ -146,7 +146,7 @@ class IMU {
      */
     void get_imu_data_thread();
 
-    serial::Serial serial_;  // 串口对象
+    Serial serial_;  // 串口对象
     std::thread rec_thread_; // 后台数据接收线程
 
     tools::ThreadSafeQueue<IMUData> queue_; // 姿态数据线程安全队列
