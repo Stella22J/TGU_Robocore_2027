@@ -8,8 +8,7 @@
  * 1. 读取TOML配置文件
  * 2. 解析camera_name和exposure_ms
  * 3. 根据camera_name判断具体相机类型
- * 4.
- * 如果是mindvision，则读取gamma和vid_pid，并创建MindVision；如果是hikrobot，则读取gain和vid_pid，并创建HikRobot
+ * 4. 如果是mindvision，则读取gamma和vid_pid，并创建MindVision；如果是hikrobot，则读取gain和vid_pid，并创建HikRobot
  * 5. 上层调用Camera::read()时，将读取请求转发给具体相机对象
  *
  *@namespace io

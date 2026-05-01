@@ -1,5 +1,5 @@
 /**
-* @file thread_safe_queue.hpp
+ * @file thread_safe_queue.hpp
  * @brief 通用线程安全有界队列模板。
  *
  * 本文件定义 ThreadSafeQueue 模板类，基于 mutex 和 condition_variable 实现
