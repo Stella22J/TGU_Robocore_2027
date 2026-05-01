@@ -1,17 +1,19 @@
 cmake_minimum_required(VERSION 3.16)
 
-find_package(yaml-cpp REQUIRED)
-
-add_subdirectory(serial)
-
-# 创建目标 io
-add_library(io STATIC 
-    hikrobot/hikrobot.cpp    
-    mindvision/mindvision.cpp
-    camera.cpp
-    cboard.cpp
+add_library(io STATIC
+        camera.cpp
+        hikrobot/hikrobot.cpp
+        mindvision/mindvision.cpp
+        cboard/cboard.cpp
         imu/imu.cpp
-    gimbal/gimbal.cpp
+        serial/serial.cpp
+)
+
+target_include_directories(io
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/hikrobot/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/mindvision/include
 )
 
 # hikrobot
@@ -34,5 +36,27 @@ else()
   message(FATAL_ERROR "Unsupported architecture: ${CMAKE_HOST_SYSTEM_PROCESSOR}!")
 endif()
 
-target_link_libraries(io MvCameraControl MVSDK usb-1.0 yaml-cpp serial)
+find_package(Threads REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(Boost REQUIRED CONFIG)
+find_package(tomlplusplus QUIET)
 
+target_link_directories(io
+        PUBLIC
+        ${Boost_INCLUDE_DIRS}
+)
+
+target_link_libraries(io
+        PUBLIC
+        Eigen3::Eigen
+        ${OpenCV_LIBS}
+        Threads::Threads
+        HikrobotSDK
+        MindvisionSDK
+        usb-1.0
+)
+
+if(tomlplusplus_FOUND)
+  target_link_libraries(io PUBLIC tomlplusplus::tomlplusplus)
+endif()
