@@ -1,4 +1,4 @@
-#include "perceptron.hpp"
+#include "../omniperception/perceptron.hpp"
 
 #include <chrono>
 #include <memory>

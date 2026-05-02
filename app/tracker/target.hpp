@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "armor.hpp"
+#include "../auto_aim/armor.hpp"
 #include "tools/extended_kalman_filter.hpp"
 
 namespace auto_aim

@@ -1,4 +1,4 @@
-#include "tracker.hpp"
+#include "../auto_aim/tracker.hpp"
 
 #include <yaml-cpp/yaml.h>
 

@@ -6,8 +6,8 @@
 #include <list>
 #include <string>
 
-#include "armor.hpp"
-#include "solver.hpp"
+#include "../auto_aim/armor.hpp"
+#include "../auto_aim/solver.hpp"
 #include "target.hpp"
 #include "tasks/omniperception/perceptron.hpp"
 #include "tools/thread_safe_queue.hpp"

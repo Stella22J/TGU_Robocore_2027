@@ -24,6 +24,6 @@ include_directories(${ARAVIS_INCLUDE_DIRS})
 
 # ===== 子模块 =====
 add_subdirectory(io)
-#add_subdirectory(app)
+add_subdirectory(app)
 add_subdirectory(task)
 add_subdirectory(tools)

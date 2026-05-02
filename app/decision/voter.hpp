@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "armor.hpp"
+#include "../auto_aim/armor.hpp"
 
 namespace auto_aim
 {

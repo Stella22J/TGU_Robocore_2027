@@ -6,7 +6,7 @@
 #include <list>
 #include <unordered_map>
 
-#include "detection.hpp"
+#include "../auto_aim/detection.hpp"
 #include "io/camera.hpp"
 #include "io/command.hpp"
 #include "io/usbcamera/usbcamera.hpp"

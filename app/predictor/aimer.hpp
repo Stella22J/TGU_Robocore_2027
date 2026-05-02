@@ -5,9 +5,9 @@
 #include <chrono>
 #include <list>
 
+#include "../tracker/target.hpp"
 #include "io/cboard.hpp"
 #include "io/command.hpp"
-#include "target.hpp"
 
 namespace auto_aim
 {
