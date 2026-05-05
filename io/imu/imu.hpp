@@ -3,18 +3,12 @@
 
 /**
  * @file imu.hpp
- * @brief IMU串口驱动接口定义。
+ * @brief 声明IMU串口驱动和姿态插值接口。
  *
- * 该文件定义了IMU串口协议接收帧、解析后的IMU数据结构，以及DM_IMU类的对外接口。
- *
- * - 串口设备：/dev/ttyACM0
- * - 波特率：921600
- *
- * @namespace io
+ * IMU类负责从固定串口读取设备姿态，并提供按时间戳查询的四元数，便于相机帧和IMU姿态对齐。
  */
 
 #include <math.h>
-#include "serial/serial.hpp"
 
 #include <Eigen/Geometry>
 #include <array>
@@ -25,6 +19,7 @@
 #include <iostream>
 #include <thread>
 
+#include "serial/serial.hpp"
 #include "tools/thread_safe_queue.hpp"
 
 namespace io {
@@ -32,22 +27,9 @@ namespace io {
 /**
  * @brief IMU串口原始接收帧。
  *
- * 一组完整IMU数据由三段子帧组成：
- * 1. 加速度帧：accx accy accz
- * 2. 角速度帧：gyrox gyroy gyroz
- * 3. 欧拉角帧：roll pitch yaw
- *
- * 每段子帧包含：
- * - 帧头
- * - 标志位
- * - 从机ID
- * - 寄存器地址
- * - 三个4字节浮点数据
- * - CRC16
- * - 帧尾
+ * 使用packed保证结构体布局与设备协议一致，避免编译器padding破坏字节映射。
  */
 struct __attribute__((packed)) IMU_Receive_Frame {
-    // 加速度子帧
     uint8_t FrameHeader1;
     uint8_t flag1;
     uint8_t slave_id1;
@@ -58,7 +40,6 @@ struct __attribute__((packed)) IMU_Receive_Frame {
     uint16_t crc1;
     uint8_t FrameEnd1;
 
-    // 角速度子帧
     uint8_t FrameHeader2;
     uint8_t flag2;
     uint8_t slave_id2;
@@ -69,7 +50,6 @@ struct __attribute__((packed)) IMU_Receive_Frame {
     uint16_t crc2;
     uint8_t FrameEnd2;
 
-    // 欧拉角子帧 r->p->y
     uint8_t FrameHeader3;
     uint8_t flag3;
     uint8_t slave_id3;
@@ -84,83 +64,85 @@ struct __attribute__((packed)) IMU_Receive_Frame {
 /**
  * @brief 解析后的IMU浮点数据。
  *
- * 原始串口帧中的uint32_t字段存放的是IEEE754 float的二进制数据。将其解析后写入该结构体。
+ * 设备协议直接发送float二进制表示，因此保留该中间结构便于调试原始量。
  */
 typedef struct {
-    float accx; // X 轴加速度
-    float accy; // Y 轴加速度
-    float accz; // Z 轴加速度
-
-    float gyrox; // X 轴角速度
-    float gyroy; // Y 轴角速度
-    float gyroz; // Z 轴角速度
-
-    float roll;  // 横滚角
-    float pitch; // 俯仰角
-    float yaw;   // 航向角
+    float accx;
+    float accy;
+    float accz;
+    float gyrox;
+    float gyroy;
+    float gyroz;
+    float roll;
+    float pitch;
+    float yaw;
 } IMU_Data;
 
 /**
  * @brief IMU串口读取与姿态插值类。
  *
- * 该类在构造时打开串口并启动接收线程。
- * 接收线程持续读取IMU数据，将欧拉角转换为四元数并写入线程安全队列。
+ * 该类在后台持续读取IMU姿态，并通过队列缓存带时间戳的四元数，供视觉模块按曝光时刻查询。
  */
 class IMU {
   public:
     /**
      * @brief 构造IMU对象。
+     *
+     * 构造阶段会等待初始两帧姿态，避免第一次插值使用未初始化缓存。
      */
     IMU();
 
     /**
      * @brief 析构IMU对象。
+     *
+     * 析构时停止接收线程并关闭串口，防止串口资源泄漏。
      */
     ~IMU();
 
     /**
      * @brief 查询指定时间戳对应的IMU姿态。
-     * @param timestamp 目标时间戳，使用 steady_clock。
-     * @return Eigen::Quaterniond 插值后的单位四元数。
+     *
+     * 通过目标时刻前后两帧四元数做slerp，使异步IMU数据更贴近相机曝光时刻。
+     *
+     * @param timestamp 目标时间戳。
+     * @return 插值得到的单位四元数。
      */
     Eigen::Quaterniond imu_at(std::chrono::steady_clock::time_point timestamp);
 
   private:
-    /**
-     * @brief 带时间戳的姿态数据。
-     */
     struct IMUData {
-        Eigen::Quaterniond q;                            // IMU姿态四元数
-        std::chrono::steady_clock::time_point timestamp; // 数据接收时间戳
+        Eigen::Quaterniond q;                            // 使用四元数避免欧拉角奇异性
+        std::chrono::steady_clock::time_point timestamp; // 使用steady_clock避免系统时间跳变影响插值
     };
 
     /**
-     * @brief 初始化串口参数并打开串口。
+     * @brief 初始化串口。
+     *
+     * 串口参数固定匹配当前IMU固件协议，启动失败时直接退出避免后续姿态不可用。
      */
     void init_serial();
 
     /**
      * @brief 后台IMU数据接收线程函数。
      *
-     * 持续从串口读取IMU数据帧，进行帧头检查、CRC校验、数据解析，然后将欧拉角转换为四元数并推入队列。
+     * 接收线程只负责协议解析和入队，姿态查询留给imu_at()按时间戳处理。
      */
     void get_imu_data_thread();
 
-    Serial serial_;  // 串口对象
-    std::thread rec_thread_; // 后台数据接收线程
+    Serial serial_;             // 用轻量串口封装替代阻塞式裸文件描述符
+    std::thread rec_thread_;    // 后台读取避免阻塞视觉主循环
 
-    tools::ThreadSafeQueue<IMUData> queue_; // 姿态数据线程安全队列
+    tools::ThreadSafeQueue<IMUData> queue_; // 队列解耦串口接收频率和视觉查询频率
 
-    // 用于imu_at()插值的目标时间前后两帧数据
-    IMUData data_ahead_;
-    IMUData data_behind_;
+    IMUData data_ahead_;  // 缓存目标时间之前的姿态，减少重复出队
+    IMUData data_behind_; // 缓存目标时间之后的姿态，供slerp插值
 
-    std::atomic<bool> stop_thread_{false}; // 接收线程停止标志
+    std::atomic<bool> stop_thread_{false}; // 原子标志避免析构和接收线程数据竞争
 
-    IMU_Receive_Frame receive_data{}; // 原始IMU接收帧缓存
-    IMU_Data data{};                  // 解析后的IMU数据缓存
+    IMU_Receive_Frame receive_data{}; // 固定缓冲区减少接收循环内存分配
+    IMU_Data data{};                  // 保留解析结果便于后续调试原始IMU量
 };
 
 } // namespace io
 
-#endif // IO__DM_IMU_HPP
+#endif // IO__IMU_HPP

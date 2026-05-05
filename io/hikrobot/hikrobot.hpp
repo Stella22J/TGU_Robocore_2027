@@ -3,12 +3,9 @@
 
 /**
  * @file hikrobot.hpp
- * @brief HikRobot工业相机驱动类声明。
+ * @brief 声明HikRobot工业相机驱动。
  *
- * 本文件声明了HikRobot相机封装类，用于通过HikRobot MVS SDK控制USB工业相机，并向上层提供统一的
- * CameraBase 读取接口。
- *
- * @namespace io
+ * 该类封装HikRobotMVS SDK，向上层提供CameraBase统一接口，并在采集异常时尝试自动恢复。
  */
 
 #include <atomic>
@@ -24,116 +21,101 @@
 namespace io {
 
 /**
- * @brief HikRobot USB工业相机驱动类。
+ * @brief HikRobotUSB工业相机驱动类。
  *
- * 该类继承自CameraBase，对HikRobot MVS SDK进行封装。
- * 类内部包含两类后台线程：
- * - daemon_thread_：守护线程，负责启动采集、监控采集状态，并在异常时重启相机
- * - capture_thread_：采集线程，负责从相机 SDK 获取图像并写入队列
- * 外部模块通过 read() 接口阻塞式读取最新图像和对应时间戳。
+ * 类内使用守护线程和采集线程分离硬件恢复和图像采集，避免相机掉线直接阻塞视觉主流程。
  */
 class HikRobot : public CameraBase {
   public:
     /**
-     * @brief 构造 HikRobot 相机对象。
-     * @param exposure_ms 曝光时间，单位：毫秒。
+     * @brief 构造HikRobot相机对象。
+     *
+     * @param exposure_ms 曝光时间，单位ms。
      * @param gain 相机增益。
-     * @param vid_pid USB设备VID/PID字符串
+     * @param vid_pid USB设备VID/PID字符串，用于异常恢复时重置USB。
      */
     HikRobot(double exposure_ms, double gain, const std::string& vid_pid);
 
     /**
-     * @brief 析构 HikRobot 相机对象。
+     * @brief 析构HikRobot相机对象。
      *
-     * 析构时会通知守护线程退出，并等待守护线程结束。
+     * 析构时结束守护线程，守护线程退出前会停止采集并释放SDK资源。
      */
     ~HikRobot() override;
 
     /**
-     * @brief 读取一帧图像及其时间戳。
+     * @brief 读取一帧图像及其采集时间戳。
      *
-     * 从线程安全队列中取出一帧图像数据。
-     * 如果当前队列为空，该函数会阻塞，直到采集线程写入新图像。
+     * 从采集线程维护的队列中取图，可以避免上层直接调用SDK阻塞。
      *
-     * @param img 输出图像
-     * @param timestamp 图像获取时间戳
+     * @param[out] img 输出图像。
+     * @param[out] timestamp 图像对应的本机稳态时钟时间戳。
      */
     void read(cv::Mat& img, std::chrono::steady_clock::time_point& timestamp) override;
 
   private:
-    /**
-     * @brief 相机图像数据包。
-     *
-     * 用于在线程安全队列中传递图像和对应时间戳。
-     */
     struct CameraData {
-        cv::Mat img;
-        std::chrono::steady_clock::time_point timestamp; // 图像获取时间戳
+        cv::Mat img;                                      // cv::Mat引用计数可安全跨队列传递图像数据
+        std::chrono::steady_clock::time_point timestamp;  // 使用本机时间戳支持多传感器对齐
     };
 
-    double exposure_us_; // 曝光时间
-    double gain_;        // 相机增益
+    double exposure_us_; // SDK曝光单位为us，构造时从ms转换后缓存
+    double gain_;        // 增益由配置控制，便于现场调参
 
-    std::thread daemon_thread_;     // 相机守护线程。
-    std::atomic<bool> daemon_quit_; // 守护线程退出标志。
+    std::thread daemon_thread_;        // 守护线程独立处理掉线恢复
+    std::atomic<bool> daemon_quit_;    // 原子标志避免析构和守护线程数据竞争
 
-    void* handle_;                   // HikRobot MVS SDK相机句柄。
-    std::thread capture_thread_;     // 图像采集线程。
-    std::atomic<bool> capturing_;    // 当前是否处于采集状态。
-    std::atomic<bool> capture_quit_; // 采集线程退出标志。
+    void* handle_;                    // SDK使用void*句柄，驱动层集中管理生命周期
+    std::thread capture_thread_;      // 采集线程隔离阻塞式取图接口
+    std::atomic<bool> capturing_;     // 守护线程通过该状态判断是否重启
+    std::atomic<bool> capture_quit_;  // 原子标志用于安全停止采集线程
 
-    tools::ThreadSafeQueue<CameraData> queue_; // 图像数据线程安全队列。
+    tools::ThreadSafeQueue<CameraData> queue_; // 容量较小以保留最新图像，避免上层处理滞后积压
 
-    int vid_; // USB Vendor ID，用于reset_usb()。
-    int pid_; // USB Product ID，用于reset_usb()。
+    int vid_; // reset_usb()需要VID定位设备
+    int pid_; // reset_usb()需要PID定位设备
 
     /**
      * @brief 启动相机采集。
      *
-     * 该函数会枚举HikRobot USB相机，创建SDK句柄，打开相机，设置相机参数，启动取流，并创建采集线程。
+     * 该函数创建SDK句柄、设置参数并启动采集线程，使守护线程可以在异常后完整重建相机状态。
      */
     void capture_start();
 
     /**
      * @brief 停止相机采集并释放SDK资源。
      *
-     * 该函数会通知采集线程退出，等待线程结束，然后依次调用：
-     * - MV_CC_StopGrabbing()
-     * - MV_CC_CloseDevice()
-     * - MV_CC_DestroyHandle()
+     * 停止顺序必须先结束采集线程再关闭SDK句柄，避免线程访问已释放资源。
      */
     void capture_stop();
 
     /**
-     * @brief 设置相机浮点类型参数。
-     * @param name HikRobot SDK参数名。
+     * @brief 设置相机浮点参数。
+     *
+     * @param name HikRobotSDK参数名。
      * @param value 参数值。
      */
     void set_float_value(const std::string& name, double value);
 
     /**
-     * @brief 设置相机枚举类型参数。
-     * @param name HikRobot SDK参数名。
+     * @brief 设置相机枚举参数。
+     *
+     * @param name HikRobotSDK参数名。
      * @param value 参数枚举值。
      */
     void set_enum_value(const std::string& name, unsigned int value);
 
     /**
-     * @brief 解析USB VID/PID字符串。
+     * @brief 解析USBVID/PID字符串。
      *
-     * 输入格式应为十六进制字符串：
-     * @code
-     * "VID:PID"
-     * @endcode
-     *
-     * @param vid_pid USB VID/PID字符串。
+     * @param vid_pid USB设备VID/PID字符串，格式为"VID:PID"。
      */
     void set_vid_pid(const std::string& vid_pid);
 
     /**
      * @brief 重置USB设备。
      *
-     * 根据vid_和pid_查USB 设备，并调用libusb_reset_device()对设备进行重置。
+     * 采集异常后重置USB可以清理部分相机固件或驱动层的异常状态。
      */
     void reset_usb() const;
 };

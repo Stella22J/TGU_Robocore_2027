@@ -1,17 +1,8 @@
 /**
  * @file imu.cpp
- * @brief IMU串口驱动实现。
+ * @brief 实现IMU串口读取、协议解析和姿态插值。
  *
- * 该文件实现 IMU 类，主要完成：
- * 1. 串口初始化；
- * 2. 后台线程读取IMU原始数据帧；
- * 3. CRC16 校验；
- * 4. 加速度、角速度、欧拉角解析；
- * 5. 欧拉角转四元数；
- * 6. 按时间戳缓存姿态；
- * 7. 按查询时间戳进行四元数插值。
- *
- *@namespace io
+ * 该文件把串口协议解析限制在io模块中，上层只需要按时间戳获取四元数姿态。
  */
 
 #include "imu.hpp"
@@ -28,149 +19,132 @@
 #include "tools/logger.hpp"
 #include "tools/math_tools.hpp"
 
-namespace io
-{
+namespace io {
 
-IMU::IMU() : queue_(5000)
-{
-  // 初始化串口设备。
-  init_serial();
+IMU::IMU() : queue_(5000) {
+    // 构造时打开串口并启动后台接收
+    init_serial();
+    rec_thread_ = std::thread(&IMU::get_imu_data_thread, this);
 
-  // 启动后台线程，持续从串口读取 IMU 数据。
-  rec_thread_ = std::thread(&IMU::get_imu_data_thread, this);
+    // 初始化两帧缓存，保证第一次imu_at()就能做前后帧插值
+    queue_.pop(data_ahead_);
+    queue_.pop(data_behind_);
 
-  // 预取两帧数据，用于后续 imu_at() 的时间插值。
-  queue_.pop(data_ahead_);
-  queue_.pop(data_behind_);
-
-  tools::logger()->info("[IMU] initialized");
+    tools::logger()->info("[IMU] initialized");
 }
 
-IMU::~IMU()
-{
-  // 通知后台线程退出
-  stop_thread_ = true;
+IMU::~IMU() {
+    // 先通知线程退出，再等待join
+    stop_thread_ = true;
 
-  // 等待接收线程安全结束
-  if (rec_thread_.joinable()) {
-    rec_thread_.join();
-  }
+    if (rec_thread_.joinable()) {
+        rec_thread_.join();
+    }
 
-  // 关闭串口
-  if (serial_.is_open()) {
-    serial_.close();
-  }
+    if (serial_.is_open()) {
+        serial_.close();
+    }
 }
 
-void IMU::init_serial()
-{
+void IMU::init_serial() {
+    // IMU固定使用该串口和波特率，与设备固件配置保持一致
     if (!serial_.open("/dev/ttyACM0", 921600)) {
         tools::logger()->warn("[IMU] failed to open serial port");
         exit(0);
     }
 
-    // 等待 IMU 或串口设备稳定
+    // 上电后等待设备稳定，避免刚打开串口时读到半包数据
     usleep(1000000);
 
     tools::logger()->info("[IMU] serial port opened");
 }
 
-void IMU::get_imu_data_thread()
-{
-  while (!stop_thread_) {
-    if (!serial_.is_open()) {
-      tools::logger()->warn("In get_imu_data_thread, imu serial port unopen");
+void IMU::get_imu_data_thread() {
+    while (!stop_thread_) {
+        if (!serial_.is_open()) {
+            tools::logger()->warn("In get_imu_data_thread, imu serial port unopen");
+        }
+
+        // 先读协议固定头，失败时快速丢弃错位数据
+        serial_.read(reinterpret_cast<uint8_t*>(&receive_data.FrameHeader1), 4);
+
+        if (receive_data.FrameHeader1 == 0x55 && receive_data.flag1 == 0xAA &&
+            receive_data.slave_id1 == 0x01 && receive_data.reg_acc == 0x01) {
+            // 帧头对齐后读取剩余载荷
+            serial_.read(reinterpret_cast<uint8_t*>(&receive_data.accx_u32), 57 - 4);
+
+            if (tools::get_crc16(reinterpret_cast<uint8_t*>(&receive_data.FrameHeader1), 16) ==
+                receive_data.crc1) {
+                // 协议直接传输float二进制，按原始字节解释即可
+                data.accx = *reinterpret_cast<float*>(&receive_data.accx_u32);
+                data.accy = *reinterpret_cast<float*>(&receive_data.accy_u32);
+                data.accz = *reinterpret_cast<float*>(&receive_data.accz_u32);
+            }
+
+            if (tools::get_crc16(reinterpret_cast<uint8_t*>(&receive_data.FrameHeader2), 16) ==
+                receive_data.crc2) {
+                // 角速度保留在缓存中，方便后续扩展输出
+                data.gyrox = *reinterpret_cast<float*>(&receive_data.gyrox_u32);
+                data.gyroy = *reinterpret_cast<float*>(&receive_data.gyroy_u32);
+                data.gyroz = *reinterpret_cast<float*>(&receive_data.gyroz_u32);
+            }
+
+            if (tools::get_crc16(reinterpret_cast<uint8_t*>(&receive_data.FrameHeader3), 16) ==
+                receive_data.crc3) {
+                // 欧拉角用于生成统一的四元数姿态输出
+                data.roll = *reinterpret_cast<float*>(&receive_data.roll_u32);
+                data.pitch = *reinterpret_cast<float*>(&receive_data.pitch_u32);
+                data.yaw = *reinterpret_cast<float*>(&receive_data.yaw_u32);
+            }
+
+            // 取到完整姿态后记录本机时间戳
+            auto timestamp = std::chrono::steady_clock::now();
+
+            // IMU输出为度制ZYX欧拉角，转换为上层更稳定使用的四元数
+            Eigen::Quaterniond q = Eigen::AngleAxisd(data.yaw * M_PI / 180, Eigen::Vector3d::UnitZ()) *
+                                   Eigen::AngleAxisd(data.pitch * M_PI / 180, Eigen::Vector3d::UnitY()) *
+                                   Eigen::AngleAxisd(data.roll * M_PI / 180, Eigen::Vector3d::UnitX());
+
+            // 归一化后再入队，避免协议抖动导致后续旋转矩阵出现尺度误差
+            q.normalize();
+
+            queue_.push({q, timestamp});
+        } else {
+            // 只记录错帧，接收循环继续寻找下一次对齐机会
+            tools::logger()->info("[IMU] failed to get correct data");
+        }
     }
-
-    // 先读取前4字节，用于判断是否为合法加速度帧起始
-    serial_.read((uint8_t *)(&receive_data.FrameHeader1), 4);
-
-    // 检查第一段加速度帧的固定帧头
-    // 合法起始为：55 AA 01 01
-    if (
-      receive_data.FrameHeader1 == 0x55 && receive_data.flag1 == 0xAA &&
-      receive_data.slave_id1 == 0x01 && receive_data.reg_acc == 0x01)
-
-    {
-      // 完整IMU数据包长度为 57 字节,已经读取4字节，继续读取剩余53字节
-      serial_.read((uint8_t *)(&receive_data.accx_u32), 57 - 4);
-
-      // 校验并解析加速度帧(CRC校验范围为每段子帧前16字节)
-      if (tools::get_crc16((uint8_t *)(&receive_data.FrameHeader1), 16) == receive_data.crc1) {
-        data.accx = *((float *)(&receive_data.accx_u32));
-        data.accy = *((float *)(&receive_data.accy_u32));
-        data.accz = *((float *)(&receive_data.accz_u32));
-      }
-
-      // 校验并解析角速度帧
-      if (tools::get_crc16((uint8_t *)(&receive_data.FrameHeader2), 16) == receive_data.crc2) {
-        data.gyrox = *((float *)(&receive_data.gyrox_u32));
-        data.gyroy = *((float *)(&receive_data.gyroy_u32));
-        data.gyroz = *((float *)(&receive_data.gyroz_u32));
-      }
-
-      // 校验并解析欧拉角帧
-      if (tools::get_crc16((uint8_t *)(&receive_data.FrameHeader3), 16) == receive_data.crc3) {
-        data.roll = *((float *)(&receive_data.roll_u32));
-        data.pitch = *((float *)(&receive_data.pitch_u32));
-        data.yaw = *((float *)(&receive_data.yaw_u32));
-
-        // 调试姿态角
-        // tools::logger()->debug(
-        //   "yaw: {:.2f}, pitch: {:.2f}, roll: {:.2f}", static_cast<double>(data.yaw),
-        //   static_cast<double>(data.pitch), static_cast<double>(data.roll));
-      }
-
-      // 使用当前接收时刻作为该 IMU 姿态的时间戳
-      auto timestamp = std::chrono::steady_clock::now();
-
-      // 将Z-Y-X顺序欧拉角转换为四元数：
-      Eigen::Quaterniond q = Eigen::AngleAxisd(data.yaw * M_PI / 180, Eigen::Vector3d::UnitZ()) *
-                             Eigen::AngleAxisd(data.pitch * M_PI / 180, Eigen::Vector3d::UnitY()) *
-                             Eigen::AngleAxisd(data.roll * M_PI / 180, Eigen::Vector3d::UnitX());
-
-      // 保证四元数为单位四元数，避免后续插值误差累积
-      q.normalize();
-
-      // 将姿态和时间戳写入线程安全队列，供imu_at()查询
-      queue_.push({q, timestamp});
-    } else {
-      // 帧头不匹配，说明当前串口数据没有对齐到合法数据包起始位置
-      tools::logger()->info("[IMU] failed to get correct data");
-    }
-  }
 }
 
-Eigen::Quaterniond IMU::imu_at(std::chrono::steady_clock::time_point timestamp)
-{
-  // 如果当前后一帧仍然早于目标时间，则推进前一帧
-  if (data_behind_.timestamp < timestamp) data_ahead_ = data_behind_;
+Eigen::Quaterniond IMU::imu_at(std::chrono::steady_clock::time_point timestamp) {
+    // 如果查询时间超过当前缓存，推进前一帧
+    if (data_behind_.timestamp < timestamp) {
+        data_ahead_ = data_behind_;
+    }
 
-  // 从队列中持续取数据，直到找到第一帧晚于目标时间的姿态
-  while (true) {
-    queue_.pop(data_behind_);
-    if (data_behind_.timestamp > timestamp) break;
-    data_ahead_ = data_behind_;
-  }
+    // 持续取数直到找到查询时间之后的姿态
+    while (true) {
+        queue_.pop(data_behind_);
+        if (data_behind_.timestamp > timestamp) {
+            break;
+        }
+        data_ahead_ = data_behind_;
+    }
 
-  // 目标时间前后的两个姿态四元数
-  Eigen::Quaterniond q_a = data_ahead_.q.normalized();
-  Eigen::Quaterniond q_b = data_behind_.q.normalized();
+    // 插值前归一化，保证slerp输入满足单位四元数假设
+    Eigen::Quaterniond q_a = data_ahead_.q.normalized();
+    Eigen::Quaterniond q_b = data_behind_.q.normalized();
 
-  auto t_a = data_ahead_.timestamp;
-  auto t_b = data_behind_.timestamp;
-  auto t_c = timestamp;
+    auto t_a = data_ahead_.timestamp;
+    auto t_b = data_behind_.timestamp;
+    auto t_c = timestamp;
 
-  // 计算目标时间在两帧之间的比例
-  std::chrono::duration<double> t_ab = t_b - t_a;
-  std::chrono::duration<double> t_ac = t_c - t_a;
+    std::chrono::duration<double> t_ab = t_b - t_a;
+    std::chrono::duration<double> t_ac = t_c - t_a;
 
-  auto k = t_ac / t_ab;
+    auto k = t_ac / t_ab;
 
-  // 使用四元数球面线性插值，得到目标时间的姿态
-  Eigen::Quaterniond q_c = q_a.slerp(k, q_b).normalized();
-
-  return q_c;
+    return q_a.slerp(k, q_b).normalized();
 }
 
-}  // namespace io
+} // namespace io
