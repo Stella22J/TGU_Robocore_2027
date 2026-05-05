@@ -22,7 +22,6 @@ target_link_libraries(decision PUBLIC
         ${OpenCV_LIBS}
         Eigen3::Eigen
         openvino::runtime
-        yaml-cpp::yaml-cpp
         spdlog::spdlog
         fmt::fmt
 )

@@ -16,7 +16,6 @@ target_link_libraries(tracker PUBLIC
         tools
         ${OpenCV_LIBS}
         Eigen3::Eigen
-        yaml-cpp::yaml-cpp
         spdlog::spdlog
         fmt::fmt
 )

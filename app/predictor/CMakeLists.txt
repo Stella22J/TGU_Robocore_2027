@@ -20,7 +20,6 @@ target_link_libraries(predictor PUBLIC
         tools
         ${OpenCV_LIBS}
         Eigen3::Eigen
-        yaml-cpp::yaml-cpp
         tinympcstatic
         spdlog::spdlog
         fmt::fmt

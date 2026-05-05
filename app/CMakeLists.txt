@@ -1,8 +1,6 @@
 set(OpenVINO_DIR "/opt/intel/openvino_2024.6.0/runtime/cmake")
 find_package(OpenVINO REQUIRED COMPONENTS Runtime)
 
-find_package(yaml-cpp REQUIRED)
-
 set(APP_INCLUDE_DIRS
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/auto_aim
