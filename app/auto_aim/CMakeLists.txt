@@ -1,6 +1,5 @@
 add_library(auto_aim OBJECT
         armor.cpp
-        auto_aim.cpp
         classifier.cpp
         detector.cpp
         perceptron.cpp
