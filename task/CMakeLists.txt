@@ -4,10 +4,10 @@ add_executable(sentry_bp sentry_bp.cpp)
 add_executable(sentry_debug sentry_debug.cpp)
 add_executable(sentry_multithread sentry_multithread.cpp)
 
-target_link_libraries(sentry PRIVATE io app tools ${OpenCV_LIBS})
-target_link_libraries(sentry_bp PRIVATE io app tools ${OpenCV_LIBS})
-target_link_libraries(sentry_debug PRIVATE io app tools ${OpenCV_LIBS})
-target_link_libraries(sentry_multithread PRIVATE io app tools ${OpenCV_LIBS})
+target_link_libraries(sentry PRIVATE app io tools)
+target_link_libraries(sentry_bp PRIVATE app io tools)
+target_link_libraries(sentry_debug PRIVATE app io tools)
+target_link_libraries(sentry_multithread PRIVATE app io tools)
 
 
 # tests

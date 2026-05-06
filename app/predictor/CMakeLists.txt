@@ -18,7 +18,13 @@ target_link_libraries(predictor PUBLIC
         tracker
         io
         tools
-        ${OpenCV_LIBS}
+        opencv_core
+        opencv_imgproc
+        opencv_imgcodecs
+        opencv_videoio
+        opencv_highgui
+        opencv_calib3d
+        opencv_dnn
         Eigen3::Eigen
         tinympcstatic
         spdlog::spdlog

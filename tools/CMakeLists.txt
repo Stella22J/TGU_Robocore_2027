@@ -21,7 +21,13 @@ target_include_directories(tools PUBLIC
 target_link_libraries(tools
     PUBLIC
     Eigen3::Eigen
-    ${OpenCV_LIBS}
+    opencv_core
+    opencv_imgproc
+    opencv_imgcodecs
+    opencv_videoio
+    opencv_highgui
+    opencv_calib3d
+    opencv_dnn
     spdlog::spdlog
     nlohmann_json::nlohmann_json
     Threads::Threads
