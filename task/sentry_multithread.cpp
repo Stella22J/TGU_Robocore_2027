@@ -9,16 +9,15 @@
 #include <thread>
 
 #include "io/camera.hpp"
-#include "io/cboard.hpp"
-#include "io/ros2/ros2.hpp"
+#include "io/cboard//cboard.hpp"
 #include "io/usbcamera/usbcamera.hpp"
-#include "tasks/auto_aim/aimer.hpp"
-#include "tasks/auto_aim/shooter.hpp"
-#include "tasks/auto_aim/solver.hpp"
-#include "tasks/auto_aim/tracker.hpp"
-#include "tasks/auto_aim/yolo.hpp"
-#include "tasks/omniperception/decider.hpp"
-#include "tasks/omniperception/perceptron.hpp"
+#include "app/auto_aim/yolo.hpp"
+#include "app/auto_aim/solver.hpp"
+#include "app/predictor/aimer.hpp"
+#include "app/decision/decider.hpp"
+#include "app/decision/shooter.hpp"
+#include "app/auto_aim/perceptron.hpp"
+#include "app/tracker/tracker.hpp"
 #include "tools/exiter.hpp"
 #include "tools/img_tools.hpp"
 #include "tools/logger.hpp"
@@ -29,8 +28,8 @@
 using namespace std::chrono;
 
 const std::string keys =
-  "{help h usage ? |                     | 输出命令行参数说明}"
-  "{@config-path   | configs/sentry.yaml | 位置参数，yaml配置文件路径 }";
+  "{help h usage ? |         | 输出命令行参数说明}"
+  "{@config-dir    | configs | TOML配置文件目录 }";
 
 int main(int argc, char * argv[])
 {
@@ -43,24 +42,28 @@ int main(int argc, char * argv[])
     cli.printMessage();
     return 0;
   }
-  auto config_path = cli.get<std::string>(0);
 
-  io::ROS2 ros2;
-  io::CBoard cboard(config_path);
-  io::Camera camera(config_path);
-  io::USBCamera usbcam1("video0", config_path);
-  io::USBCamera usbcam2("video2", config_path);
-  io::USBCamera usbcam3("video4", config_path);
-  io::USBCamera usbcam4("video6", config_path);
+  auto config_dir = cli.get<std::string>(0);
+  auto camera_config = config_dir + "/camera.toml";
+  auto vision_config = config_dir + "/vision.toml";
+  auto game_config = config_dir + "/game.toml";
+  auto serial_config = config_dir + "/serial.toml";
 
-  auto_aim::YOLO yolo(config_path, false);
-  auto_aim::Solver solver(config_path);
-  auto_aim::Tracker tracker(config_path, solver);
-  auto_aim::Aimer aimer(config_path);
-  auto_aim::Shooter shooter(config_path);
+  io::CBoard cboard(serial_config);
+  io::Camera camera(camera_config);
+  io::USBCamera usbcam1("video0", camera_config);
+  io::USBCamera usbcam2("video2", camera_config);
+  io::USBCamera usbcam3("video4", camera_config);
+  io::USBCamera usbcam4("video6", camera_config);
 
-  omniperception::Decider decider(config_path);
-  omniperception::Perceptron perceptron(&usbcam1, &usbcam2, &usbcam3, &usbcam4, config_path);
+  auto_aim::YOLO yolo(vision_config, false);
+  auto_aim::Solver solver(camera_config);
+  auto_aim::Tracker tracker(vision_config, solver);
+  auto_aim::Aimer aimer(vision_config);
+  auto_aim::Shooter shooter(vision_config);
+
+  omniperception::Decider decider(game_config);
+  omniperception::Perceptron perceptron(&usbcam1, &usbcam2, &usbcam3, &usbcam4, vision_config);
 
   omniperception::DetectionResult switch_target;
   cv::Mat img;
@@ -77,8 +80,6 @@ int main(int argc, char * argv[])
     Eigen::Vector3d gimbal_pos = tools::eulers(solver.R_gimbal2world(), 2, 1, 0);
 
     auto armors = yolo.detect(img);
-
-    decider.get_invincible_armor(ros2.subscribe_enemy_status());
 
     decider.armor_filter(armors);
 
@@ -114,11 +115,6 @@ int main(int argc, char * argv[])
     // command.shoot = false;
 
     cboard.send(command);
-
-    /// ROS2通信
-    Eigen::Vector4d target_info = decider.get_target_info(armors, targets);
-
-    ros2.publish(target_info);
   }
 
   return 0;
