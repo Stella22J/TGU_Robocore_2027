@@ -1,8 +1,6 @@
 /**
  * @file planner.cpp
  * @brief TinyMPC云台规划器实现，生成更平滑的yaw和pitch控制轨迹
- *
- * 该文件随所属模块放置，便于按功能维护，同时保持跨模块接口清晰
  */
 
 #include "planner.hpp"

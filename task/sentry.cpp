@@ -6,16 +6,14 @@
 #include <thread>
 
 #include "io/camera.hpp"
-#include "io/cboard.hpp"
-#include "io/ros2/publish2nav.hpp"
-#include "io/ros2/ros2.hpp"
+#include "io/cboard//cboard.hpp"
 #include "io/usbcamera/usbcamera.hpp"
-#include "tasks/auto_aim/aimer.hpp"
-#include "tasks/auto_aim/shooter.hpp"
-#include "tasks/auto_aim/solver.hpp"
-#include "tasks/auto_aim/tracker.hpp"
-#include "tasks/auto_aim/yolo.hpp"
-#include "tasks/omniperception/decider.hpp"
+#include "app/auto_aim/yolo.hpp"
+#include "app/auto_aim/solver.hpp"
+#include "app/predictor/aimer.hpp"
+#include "app/decision/decider.hpp"
+#include "app/decision/shooter.hpp"
+#include "app/tracker/tracker.hpp"
 #include "tools/exiter.hpp"
 #include "tools/img_tools.hpp"
 #include "tools/logger.hpp"
@@ -42,7 +40,6 @@ int main(int argc, char * argv[])
   }
   auto config_path = cli.get<std::string>(0);
 
-  io::ROS2 ros2;
   io::CBoard cboard(config_path);
   io::Camera camera(config_path);
   io::Camera back_camera("configs/camera.toml");
@@ -74,11 +71,9 @@ int main(int argc, char * argv[])
 
     auto armors = yolo.detect(img);
 
-    decider.get_invincible_armor(ros2.subscribe_enemy_status());
 
     decider.armor_filter(armors);
 
-    // decider.get_auto_aim_target(armors, ros2.subscribe_autoaim_target());
 
     decider.set_priority(armors);
 
@@ -97,10 +92,6 @@ int main(int argc, char * argv[])
 
     cboard.send(command);
 
-    /// ROS2通信
-    Eigen::Vector4d target_info = decider.get_target_info(armors, targets);
-
-    ros2.publish(target_info);
   }
   return 0;
 }

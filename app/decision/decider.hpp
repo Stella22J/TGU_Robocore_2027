@@ -1,14 +1,12 @@
 /**
  * @file decider.hpp
  * @brief 全向感知目标决策接口，负责目标过滤、优先级排序和粗略角度计算
- *
- * 该文件随所属模块放置，便于按功能维护，同时保持跨模块接口清晰
  */
 
 #ifndef OMNIPERCEPTION__DECIDER_HPP
 #define OMNIPERCEPTION__DECIDER_HPP
 
-#include <Eigen/Dense> // 必须在opencv2/core/eigen.hpp上面
+#include <Eigen/Dense>
 #include <iostream>
 #include <list>
 #include <unordered_map>
@@ -18,7 +16,7 @@
 #include "app/auto_aim/yolo.hpp"
 #include "app/tracker/target.hpp"
 #include "io/camera.hpp"
-#include "io/command.hpp"
+#include "io/cboard/command.hpp"
 #include "io/usbcamera/usbcamera.hpp"
 
 namespace omniperception {

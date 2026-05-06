@@ -1,8 +1,6 @@
 /**
  * @file planner.hpp
  * @brief TinyMPC云台规划器接口，封装MPC权重、参考轨迹和输出计划
- *
- * 该文件随所属模块放置，便于按功能维护，同时保持跨模块接口清晰
  */
 
 #ifndef AUTO_AIM__PLANNER_HPP
