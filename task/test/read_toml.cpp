@@ -4,39 +4,41 @@
 
 #include <iomanip>
 #include <iostream>
+#include <toml++/toml.hpp>
 
-#include "tools/tomlpp.hpp"
-
-int main() {
+int main(int argc, char **argv)
+{
     std::cout << std::setprecision(17);
-    auto config = toml::parse_file("../../config/testconfig.toml.bak");
 
-    std::string title = config["title"].value_or("default");
-
-    double exposure_ms = config["camera"]["exposure_ms"].value_or(0);
-    double gain = config["camera"]["gain"].value_or(0.0);
-
-    std::cout << title << std::endl;
-    std::cout << "exposure_ms: " << exposure_ms << std::endl;
-    std::cout << "gain: " << gain << std::endl;
-
-    auto arr1 = config["camera"]["camera_matrix"].as_array();
-    double K[3][3];
-    for (int i = 0; i < 9; i++) {
-        K[i / 3][i % 3] = (*arr1)[i].value_or(0.0);
+    std::string config_path = "../config/vision.toml";
+    if (argc > 1) {
+        config_path = argv[1];
     }
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            std::cout << K[i][j] << " ";
+
+    try {
+        auto config = toml::parse_file(config_path);
+
+        std::cout << "Read TOML: " << config_path << std::endl;
+
+        if (auto yolo_name = config["yolo_name"].value<std::string>()) {
+            std::cout << "yolo_name: " << *yolo_name << std::endl;
         }
-        std::cout << std::endl;
-    }
 
-    auto arr = config["camera"]["distort_coeffs"].as_array();
+        if (auto min_confidence = config["min_confidence"].value<double>()) {
+            std::cout << "min_confidence: " << *min_confidence << std::endl;
+        }
 
-    for (size_t i = 0; i < 5; i++) {
-        double val = (*arr)[i].value_or(0.0);
-        std::cout << val << std::endl;
+        if (auto roi = config["roi"].as_table()) {
+            std::cout << "roi.x: " << (*roi)["x"].value_or(0) << std::endl;
+            std::cout << "roi.y: " << (*roi)["y"].value_or(0) << std::endl;
+            std::cout << "roi.width: " << (*roi)["width"].value_or(0) << std::endl;
+            std::cout << "roi.height: " << (*roi)["height"].value_or(0) << std::endl;
+        }
+
+    } catch (const toml::parse_error &err) {
+        std::cerr << "TOML读取失败: " << err.description() << std::endl;
+        std::cerr << "文件路径: " << config_path << std::endl;
+        return -1;
     }
 
     return 0;

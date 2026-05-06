@@ -11,7 +11,7 @@
 #include <memory>
 
 #include "app/auto_aim/armor.hpp"
-#include "decider.hpp"
+#include "app/decision/decider.hpp"
 #include "detection.hpp"
 #include "io/usbcamera/usbcamera.hpp"
 #include "tools/thread_pool.hpp"

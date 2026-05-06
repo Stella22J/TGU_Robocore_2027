@@ -40,7 +40,7 @@ int main() {
         return -1;
     }
 
-    ArvStream* stream = arv_camera_create_stream(camera, nullptr, nullptr, &error);
+    ArvStream* stream = arv_camera_create_stream(camera, nullptr, nullptr, nullptr, &error);
     if (print_error_and_clear(error, "arv_camera_create_stream") || stream == nullptr) {
         g_object_unref(camera);
         return -1;
