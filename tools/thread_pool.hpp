@@ -18,7 +18,7 @@
 #include <thread>
 #include <vector>
 
-#include "tasks/auto_aim/yolo.hpp"
+#include "app/auto_aim/yolo.hpp"
 #include "tools/logger.hpp"
 
 namespace tools {
