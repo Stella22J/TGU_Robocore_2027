@@ -34,10 +34,10 @@ bool Serial::open(const std::string& device, int baudrate) {
             boost::asio::serial_port_base::flow_control(boost::asio::serial_port_base::flow_control::none));
 
         is_open_ = true;
-        tools::logger()->info("[{}] {} open success", MODULE, device);
+        LOG_INFO(MODULE, "{} open success", device);
         return true;
     } catch (std::exception& e) {
-        tools::logger()->error("[{}] {} open failed: {}", MODULE, device, e.what());
+        LOG_ERROR(MODULE, "{} open failed: {}", device, e.what());
         is_open_ = false;
         return false;
     }
@@ -76,7 +76,7 @@ size_t Serial::read(uint8_t* data, size_t size) {
         // 同步读取固定长度数据，适合定长协议帧
         return boost::asio::read(serial_, boost::asio::buffer(data, size));
     } catch (const std::exception& e) {
-        tools::logger()->error("[{}] read failed: {}", MODULE, e.what());
+        LOG_ERROR(MODULE, "read failed: {}", e.what());
         is_open_ = false;
         return 0;
     }

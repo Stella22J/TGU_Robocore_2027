@@ -30,7 +30,7 @@ Perceptron::Perceptron(io::USBCamera* usbcam1, io::USBCamera* usbcam2, io::USBCa
     threads_.emplace_back([&] { parallel_infer(usbcam3, yolo_parallel3_); });
     threads_.emplace_back([&] { parallel_infer(usbcam4, yolo_parallel4_); });
 
-    tools::logger()->info("Perceptron initialized.");
+    LOG_INFO("PERCEPTRON", "Perceptron initialized.");
 }
 
 Perceptron::~Perceptron() {
@@ -46,7 +46,7 @@ Perceptron::~Perceptron() {
             t.join();
         }
     }
-    tools::logger()->info("Perceptron destructed.");
+    LOG_INFO("PERCEPTRON", "Perceptron destructed.");
 }
 
 std::vector<DetectionResult> Perceptron::get_detection_queue() {
@@ -66,7 +66,7 @@ std::vector<DetectionResult> Perceptron::get_detection_queue() {
 void Perceptron::parallel_infer(io::USBCamera* cam,
                                 std::shared_ptr<auto_aim::YOLO>& yolov8_parallel) {
     if (!cam) {
-        tools::logger()->error("Camera pointer is null!");
+        LOG_ERROR("PERCEPTRON", "Camera pointer is null!");
         return;
     }
     try {
@@ -99,7 +99,7 @@ void Perceptron::parallel_infer(io::USBCamera* cam,
             }
         }
     } catch (const std::exception& e) {
-        tools::logger()->error("Exception in parallel_infer: {}", e.what());
+        LOG_ERROR("PERCEPTRON", "Exception in parallel_infer: {}", e.what());
     }
 }
 

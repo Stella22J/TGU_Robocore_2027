@@ -30,7 +30,7 @@ IMU::IMU() : queue_(5000) {
     queue_.pop(data_ahead_);
     queue_.pop(data_behind_);
 
-    tools::logger()->info("[IMU] initialized");
+    LOG_INFO("IMU", "initialized");
 }
 
 IMU::~IMU() {
@@ -49,20 +49,20 @@ IMU::~IMU() {
 void IMU::init_serial() {
     // IMU固定使用该串口和波特率，与设备固件配置保持一致
     if (!serial_.open("/dev/ttyACM0", 921600)) {
-        tools::logger()->warn("[IMU] failed to open serial port");
+        LOG_WARN("IMU", "failed to open serial port");
         exit(0);
     }
 
     // 上电后等待设备稳定，避免刚打开串口时读到半包数据
     usleep(1000000);
 
-    tools::logger()->info("[IMU] serial port opened");
+    LOG_INFO("IMU", "serial port opened");
 }
 
 void IMU::get_imu_data_thread() {
     while (!stop_thread_) {
         if (!serial_.is_open()) {
-            tools::logger()->warn("In get_imu_data_thread, imu serial port unopen");
+            LOG_WARN("IMU", "In get_imu_data_thread, imu serial port unopen");
         }
 
         // 先读协议固定头，失败时快速丢弃错位数据
@@ -111,7 +111,7 @@ void IMU::get_imu_data_thread() {
             queue_.push({q, timestamp});
         } else {
             // 只记录错帧，接收循环继续寻找下一次对齐机会
-            tools::logger()->info("[IMU] failed to get correct data");
+            LOG_INFO("IMU", "failed to get correct data");
         }
     }
 }

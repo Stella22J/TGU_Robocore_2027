@@ -20,10 +20,10 @@ CBoard::CBoard(const std::string& config_path)
       queue_(5000),
       can_(read_toml(config_path), std::bind(&CBoard::callback, this, std::placeholders::_1)) {
     // 回调可能早于构造函数结束运行，因此这里等待初始姿态，避免第一次插值读到未初始化数据
-    tools::logger()->info("[CBoard] Waiting for q...");
+    LOG_INFO("CBoard", "Waiting for q...");
     queue_.pop(data_ahead_);
     queue_.pop(data_behind_);
-    tools::logger()->info("[CBoard] Opened.");
+    LOG_INFO("CBoard", "Opened.");
 }
 
 Eigen::Quaterniond CBoard::imu_at(std::chrono::steady_clock::time_point timestamp) {
@@ -78,7 +78,7 @@ void CBoard::send(Command command) const {
         // 发送失败交给日志记录，不让单帧失败打断主流程
         can_.write(&frame);
     } catch (const std::exception& e) {
-        tools::logger()->warn("{}", e.what());
+        LOG_WARN("CBoard", "{}", e.what());
     }
 }
 
@@ -95,7 +95,7 @@ void CBoard::callback(const can_frame& frame) {
 
         // 控制板异常帧直接丢弃，否则单位四元数假设会污染姿态插值
         if (std::abs(x * x + y * y + z * z + w * w - 1) > 1e-2) {
-            tools::logger()->warn("Invalid q: {} {} {} {}", w, x, y, z);
+            LOG_WARN("CBoard", "Invalid q: {} {} {} {}", w, x, y, z);
             return;
         }
 
@@ -113,8 +113,9 @@ void CBoard::callback(const can_frame& frame) {
         auto now = std::chrono::steady_clock::now();
 
         if (bullet_speed > 0 && tools::delta_time(now, last_log_time) >= 1.0) {
-            tools::logger()->info(
-                "[CBoard] Bullet speed: {:.2f} m/s, Mode: {}, Shoot mode: {}, FT angle: {:.2f} rad",
+            LOG_INFO(
+                "CBoard",
+                "Bullet speed: {:.2f} m/s, Mode: {}, Shoot mode: {}, FT angle: {:.2f} rad",
                 bullet_speed, MODES[mode], SHOOT_MODES[shoot_mode], ft_angle);
             last_log_time = now;
         }

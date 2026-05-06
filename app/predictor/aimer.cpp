@@ -34,7 +34,7 @@ Aimer::Aimer(const std::string& config_path)
     if (left_yaw_offset && right_yaw_offset) {
         left_yaw_offset_ = *left_yaw_offset / 57.3;   // 配置使用角度，控制和预测统一使用弧度
         right_yaw_offset_ = *right_yaw_offset / 57.3; // 配置使用角度，控制和预测统一使用弧度
-        tools::logger()->info("[Aimer] successfully loading shootmode");
+        LOG_INFO("Aimer", "successfully loading shootmode");
     }
 }
 
@@ -78,8 +78,7 @@ io::Command Aimer::aim(std::list<Target> targets, std::chrono::steady_clock::tim
     auto d0 = std::sqrt(xyz0[0] * xyz0[0] + xyz0[1] * xyz0[1]);
     tools::Trajectory trajectory0(bullet_speed, d0, xyz0[2]);
     if (trajectory0.unsolvable) {
-        tools::logger()->debug("[Aimer] Unsolvable trajectory0: {:.2f} {:.2f} {:.2f}", bullet_speed,
-                               d0, xyz0[2]);
+        LOG_DEBUG("Aimer", "Unsolvable trajectory0: {:.2f} {:.2f} {:.2f}", bullet_speed, d0, xyz0[2]);
         debug_aim_point.valid = false;
         return {false, false, 0, 0};
     }
@@ -110,9 +109,7 @@ io::Command Aimer::aim(std::list<Target> targets, std::chrono::steady_clock::tim
 
         // 检查弹道是否可解
         if (current_traj.unsolvable) {
-            tools::logger()->debug(
-                "[Aimer] Unsolvable trajectory in iter {}: speed={:.2f}, d={:.2f}, z={:.2f}",
-                iter + 1, bullet_speed, d, xyz.z());
+            LOG_DEBUG("Aimer", "Unsolvable trajectory in iter {}: speed={:.2f}, d={:.2f}, z={:.2f}", iter + 1, bullet_speed, d, xyz.z());
             debug_aim_point.valid = false;
             return {false, false, 0, 0};
         }
@@ -178,7 +175,7 @@ AimPoint Aimer::choose_aim_point(const Target& target) {
         }
         // 绝无可能
         if (id_list.empty()) {
-            tools::logger()->warn("Empty id list!");
+            LOG_WARN("AIMER", "Empty id list!");
             return {false, armor_xyza_list[0]};
         }
 

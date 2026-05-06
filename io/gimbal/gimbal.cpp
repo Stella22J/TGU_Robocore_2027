@@ -31,7 +31,7 @@ Gimbal::Gimbal(const std::string& config_path) {
     serial_.recv<GimbalToVision>([this](const GimbalToVision& data) { handle_frame(data); });
 
     if (!serial_.open(com_port_, baudrate_)) {
-        tools::logger()->error("[Gimbal] Failed to open serial:{} at {}", com_port_, baudrate_);
+        LOG_ERROR("Gimbal", "Failed to open serial:{} at {}", com_port_, baudrate_);
         std::exit(1);
     }
 
@@ -39,7 +39,7 @@ Gimbal::Gimbal(const std::string& config_path) {
 
     // 等到第一帧姿态后再返回,避免调用方启动后立刻拿到无效姿态
     queue_.pop();
-    tools::logger()->info("[Gimbal] First q received.");
+    LOG_INFO("Gimbal", "First q received.");
 }
 
 Gimbal::~Gimbal() {
@@ -115,7 +115,7 @@ void Gimbal::send(io::VisionToGimbal data) {
 
     if (serial_.write(reinterpret_cast<uint8_t*>(&tx_data_), sizeof(tx_data_)) !=
         sizeof(tx_data_)) {
-        tools::logger()->warn("[Gimbal] Failed to write serial");
+        LOG_WARN("Gimbal", "Failed to write serial");
     }
 }
 
@@ -137,13 +137,13 @@ void Gimbal::send(bool control, bool fire, float yaw, float yaw_vel, float yaw_a
 
     if (serial_.write(reinterpret_cast<uint8_t*>(&tx_data_), sizeof(tx_data_)) !=
         sizeof(tx_data_)) {
-        tools::logger()->warn("[Gimbal] Failed to write serial");
+        LOG_WARN("Gimbal", "Failed to write serial");
     }
 }
 
 void Gimbal::handle_frame(const GimbalToVision& data) {
     if (!tools::check_crc16(reinterpret_cast<const uint8_t*>(&data), sizeof(GimbalToVision))) {
-        tools::logger()->debug("[Gimbal] CRC16 check failed.");
+        LOG_DEBUG("Gimbal", "CRC16 check failed.");
         return;
     }
 
@@ -178,13 +178,13 @@ void Gimbal::handle_frame(const GimbalToVision& data) {
         break;
     default:
         mode_ = GimbalMode::IDLE;
-        tools::logger()->warn("[Gimbal] Invalid mode:{}", data.mode);
+        LOG_WARN("Gimbal", "Invalid mode:{}", data.mode);
         break;
     }
 }
 
 void Gimbal::read_thread() {
-    tools::logger()->info("[Gimbal] read_thread started.");
+    LOG_INFO("Gimbal", "read_thread started.");
 
     int error_count = 0;
 
@@ -194,7 +194,7 @@ void Gimbal::read_thread() {
 
             if (error_count > 5000) {
                 error_count = 0;
-                tools::logger()->warn("[Gimbal] Too many errors, attempting to reconnect...");
+                LOG_WARN("Gimbal", "Too many errors, attempting to reconnect...");
                 reconnect();
             }
 
@@ -210,15 +210,14 @@ void Gimbal::read_thread() {
         }
     }
 
-    tools::logger()->info("[Gimbal] read_thread stopped.");
+    LOG_INFO("Gimbal", "read_thread stopped.");
 }
 
 void Gimbal::reconnect() {
     int max_retry_count = 10;
 
     for (int i = 0; i < max_retry_count && !quit_; ++i) {
-        tools::logger()->warn("[Gimbal] Reconnecting serial, attempt {}/{}...", i + 1,
-                              max_retry_count);
+        LOG_WARN("Gimbal", "Reconnecting serial, attempt {}/{}...", i + 1, max_retry_count);
 
         serial_.close();
 
@@ -232,11 +231,11 @@ void Gimbal::reconnect() {
             // 清空旧姿态,避免重连后用断线前数据参与插值
             queue_.clear();
 
-            tools::logger()->info("[Gimbal] Reconnected serial successfully.");
+            LOG_INFO("Gimbal", "Reconnected serial successfully.");
             break;
         }
 
-        tools::logger()->warn("[Gimbal] Reconnect failed");
+        LOG_WARN("Gimbal", "Reconnect failed");
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }

@@ -10,7 +10,7 @@
 #include <fstream>
 #include <mutex>
 #include <string>
-#include <format>
+#include <fmt/format.h>
 
 namespace tools {
     enum class LogLevel {
@@ -62,32 +62,32 @@ namespace tools {
 } // namespace tools
 
 
-#define LOG_INFO(module, fmt, ...) \
+#define LOG_INFO(module, fmt_str, ...) \
 ::tools::Logger::instance().log( \
 ::tools::LogLevel::Info, module, \
-std::format(fmt __VA_OPT__(,) __VA_ARGS__), \
+fmt::format(fmt_str __VA_OPT__(,) __VA_ARGS__), \
 __FILE__, __LINE__)
 
 #ifdef NDEBUG
-#define LOG_DEBUG(module, fmt, ...) ((void)0)
+#define LOG_DEBUG(module, fmt_str, ...) ((void)0)
 #else
-#define LOG_DEBUG(module, fmt, ...) \
+#define LOG_DEBUG(module, fmt_str, ...) \
 ::tools::Logger::instance().log( \
 ::tools::LogLevel::Debug, module, \
-std::format(fmt __VA_OPT__(,) __VA_ARGS__), \
+fmt::format(fmt_str __VA_OPT__(,) __VA_ARGS__), \
 __FILE__, __LINE__)
 #endif
 
-#define LOG_WARN(module, fmt, ...) \
+#define LOG_WARN(module, fmt_str, ...) \
 ::tools::Logger::instance().log( \
 ::tools::LogLevel::Warn, module, \
-std::format(fmt __VA_OPT__(,) __VA_ARGS__), \
+fmt::format(fmt_str __VA_OPT__(,) __VA_ARGS__), \
 __FILE__, __LINE__)
 
-#define LOG_ERROR(module, fmt, ...) \
+#define LOG_ERROR(module, fmt_str, ...) \
 ::tools::Logger::instance().log( \
 ::tools::LogLevel::Error, module, \
-std::format(fmt __VA_OPT__(,) __VA_ARGS__), \
+fmt::format(fmt_str __VA_OPT__(,) __VA_ARGS__), \
 __FILE__, __LINE__)
 
 #endif //TGU_ROBOCORE_2027_LOGGER_HPP

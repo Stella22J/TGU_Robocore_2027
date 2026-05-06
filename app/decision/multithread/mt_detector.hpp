@@ -59,7 +59,7 @@ class MultiThreadDetector {
 
     tools::ThreadSafeQueue<
         std::tuple<cv::Mat, std::chrono::steady_clock::time_point, ov::InferRequest>>
-        queue_{16, [] { tools::logger()->debug("[MultiThreadDetector] queue is full!"); }};
+        queue_{16, [] { LOG_DEBUG("MultiThreadDetector", "queue is full!"); }};
 };
 
 } // namespace multithread

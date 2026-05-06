@@ -54,9 +54,7 @@ io::Command Decider::decide(auto_aim::YOLO& yolo, const Eigen::Vector3d& gimbal_
             delta_angle = this->delta_angle(armors, cams[count_]->device_name);
         }
 
-        tools::logger()->debug(
-            "[{} camera] delta yaw:{:.2f},target pitch:{:.2f},armor number:{},armor name:{}",
-            (count_ == 2 ? "back" : cams[count_]->device_name), delta_angle[0], delta_angle[1],
+        LOG_DEBUG("DECIDER", "[{} camera] delta yaw:{:.2f},target pitch:{:.2f},armor number:{},armor name:{}", (count_ == 2 ? "back" : cams[count_]->device_name), delta_angle[0], delta_angle[1],
             armors.size(), auto_aim::ARMOR_NAMES[armors.front().name]);
 
         count_ = (count_ + 1) % 3;
@@ -80,10 +78,7 @@ io::Command Decider::decide(auto_aim::YOLO& yolo, const Eigen::Vector3d& gimbal_
 
     if (!empty) {
         auto delta_angle = this->delta_angle(armors, "back");
-        tools::logger()->debug(
-            "[back camera] delta yaw:{:.2f},target pitch:{:.2f},armor number:{},armor name:{}",
-            delta_angle[0], delta_angle[1], armors.size(),
-            auto_aim::ARMOR_NAMES[armors.front().name]);
+        LOG_DEBUG("back camera", "delta yaw:{:.2f},target pitch:{:.2f},armor number:{},armor name:{}", delta_angle[0], delta_angle[1], armors.size(), auto_aim::ARMOR_NAMES[armors.front().name]);
 
         return io::Command{true, false, tools::limit_rad(gimbal_pos[0] + delta_angle[0] / 57.3),
                            tools::limit_rad(delta_angle[1] / 57.3)};
@@ -100,8 +95,7 @@ io::Command Decider::decide(const std::vector<DetectionResult>& detection_queue)
     DetectionResult dr = detection_queue.front();
     if (dr.armors.empty())
         return io::Command{false, false, 0, 0};
-    tools::logger()->info("omniperceptron find {},delta yaw is {:.4f}",
-                          auto_aim::ARMOR_NAMES[dr.armors.front().name], dr.delta_yaw * 57.3);
+    LOG_INFO("DECIDER", "omniperceptron find {},delta yaw is {:.4f}", auto_aim::ARMOR_NAMES[dr.armors.front().name], dr.delta_yaw * 57.3);
 
     return io::Command{true, false, dr.delta_yaw, dr.delta_pitch};
 };
@@ -210,7 +204,7 @@ void Decider::get_invincible_armor(const std::vector<int8_t>& invincible_enemy_i
         return;
 
     for (const auto& id : invincible_enemy_ids) {
-        tools::logger()->info("invincible armor id: {}", id);
+        LOG_INFO("DECIDER", "invincible armor id: {}", id);
         invincible_armor_.push_back(auto_aim::ArmorName(id - 1));
     }
 }
@@ -224,11 +218,11 @@ void Decider::get_auto_aim_target(std::list<auto_aim::Armor>& armors,
 
     for (const auto& target : auto_aim_target) {
         if (target <= 0 || static_cast<size_t>(target) > auto_aim::ARMOR_NAMES.size()) {
-            tools::logger()->warn("Received invalid auto_aim target value: {}", int(target));
+            LOG_WARN("DECIDER", "Received invalid auto_aim target value: {}", int(target));
             continue;
         }
         auto_aim_targets.push_back(static_cast<auto_aim::ArmorName>(target - 1));
-        tools::logger()->info("nav send auto_aim target is {}", auto_aim::ARMOR_NAMES[target - 1]);
+        LOG_INFO("DECIDER", "nav send auto_aim target is {}", auto_aim::ARMOR_NAMES[target - 1]);
     }
 
     if (auto_aim_targets.empty())

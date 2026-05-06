@@ -25,11 +25,11 @@ HikRobot::HikRobot(double exposure_ms, double gain, const std::string& vid_pid)
 
     // libusb只服务于异常恢复，初始化失败不阻止SDK先尝试取图
     if (libusb_init(NULL)) {
-        tools::logger()->warn("Unable to init libusb!");
+        LOG_WARN("HIKROBOT", "Unable to init libusb!");
     }
 
     daemon_thread_ = std::thread{[this] {
-        tools::logger()->info("HikRobot's daemon thread started.");
+        LOG_INFO("HIKROBOT", "HikRobot's daemon thread started.");
 
         // 守护线程负责首次启动和异常重启
         capture_start();
@@ -47,7 +47,7 @@ HikRobot::HikRobot(double exposure_ms, double gain, const std::string& vid_pid)
         }
 
         capture_stop();
-        tools::logger()->info("HikRobot's daemon thread stopped.");
+        LOG_INFO("HIKROBOT", "HikRobot's daemon thread stopped.");
     }};
 }
 
@@ -58,7 +58,7 @@ HikRobot::~HikRobot() {
         daemon_thread_.join();
     }
 
-    tools::logger()->info("HikRobot destructed.");
+    LOG_INFO("HIKROBOT", "HikRobot destructed.");
 }
 
 void HikRobot::read(cv::Mat& img, std::chrono::steady_clock::time_point& timestamp) {
@@ -81,26 +81,26 @@ void HikRobot::capture_start() {
     // 通过MVS SDK枚举USB相机
     ret = MV_CC_EnumDevices(MV_USB_DEVICE, &device_list);
     if (ret != MV_OK) {
-        tools::logger()->warn("MV_CC_EnumDevices failed: {:#x}", ret);
+        LOG_WARN("HIKROBOT", "MV_CC_EnumDevices failed: {:#x}", ret);
         return;
     }
 
     if (device_list.nDeviceNum == 0) {
-        tools::logger()->warn("Not found camera!");
+        LOG_WARN("HIKROBOT", "Not found camera!");
         return;
     }
 
     // 目前只取第一台SDK枚举设备，多相机筛选应在后续配置中扩展
     ret = MV_CC_CreateHandle(&handle_, device_list.pDeviceInfo[0]);
     if (ret != MV_OK) {
-        tools::logger()->warn("MV_CC_CreateHandle failed: {:#x}", ret);
+        LOG_WARN("HIKROBOT", "MV_CC_CreateHandle failed: {:#x}", ret);
         return;
     }
 
     // 句柄创建成功后才能打开设备并设置参数
     ret = MV_CC_OpenDevice(handle_);
     if (ret != MV_OK) {
-        tools::logger()->warn("MV_CC_OpenDevice failed: {:#x}", ret);
+        LOG_WARN("HIKROBOT", "MV_CC_OpenDevice failed: {:#x}", ret);
         return;
     }
 
@@ -115,12 +115,12 @@ void HikRobot::capture_start() {
     // 开始SDK取流后再启动本地采集线程
     ret = MV_CC_StartGrabbing(handle_);
     if (ret != MV_OK) {
-        tools::logger()->warn("MV_CC_StartGrabbing failed: {:#x}", ret);
+        LOG_WARN("HIKROBOT", "MV_CC_StartGrabbing failed: {:#x}", ret);
         return;
     }
 
     capture_thread_ = std::thread{[this] {
-        tools::logger()->info("HikRobot's capture thread started.");
+        LOG_INFO("HIKROBOT", "HikRobot's capture thread started.");
 
         capturing_ = true;
 
@@ -136,7 +136,7 @@ void HikRobot::capture_start() {
             // SDK返回的buffer必须在处理后显式释放
             ret = MV_CC_GetImageBuffer(handle_, &raw, nMsec);
             if (ret != MV_OK) {
-                tools::logger()->warn("MV_CC_GetImageBuffer failed: {:#x}", ret);
+                LOG_WARN("HIKROBOT", "MV_CC_GetImageBuffer failed: {:#x}", ret);
                 break;
             }
 
@@ -178,13 +178,13 @@ void HikRobot::capture_start() {
 
             ret = MV_CC_FreeImageBuffer(handle_, &raw);
             if (ret != MV_OK) {
-                tools::logger()->warn("MV_CC_FreeImageBuffer failed: {:#x}", ret);
+                LOG_WARN("HIKROBOT", "MV_CC_FreeImageBuffer failed: {:#x}", ret);
                 break;
             }
         }
 
         capturing_ = false;
-        tools::logger()->info("HikRobot's capture thread stopped.");
+        LOG_INFO("HIKROBOT", "HikRobot's capture thread stopped.");
     }};
 }
 
@@ -204,19 +204,19 @@ void HikRobot::capture_stop() {
 
     ret = MV_CC_StopGrabbing(handle_);
     if (ret != MV_OK) {
-        tools::logger()->warn("MV_CC_StopGrabbing failed: {:#x}", ret);
+        LOG_WARN("HIKROBOT", "MV_CC_StopGrabbing failed: {:#x}", ret);
         return;
     }
 
     ret = MV_CC_CloseDevice(handle_);
     if (ret != MV_OK) {
-        tools::logger()->warn("MV_CC_CloseDevice failed: {:#x}", ret);
+        LOG_WARN("HIKROBOT", "MV_CC_CloseDevice failed: {:#x}", ret);
         return;
     }
 
     ret = MV_CC_DestroyHandle(handle_);
     if (ret != MV_OK) {
-        tools::logger()->warn("MV_CC_DestroyHandle failed: {:#x}", ret);
+        LOG_WARN("HIKROBOT", "MV_CC_DestroyHandle failed: {:#x}", ret);
         return;
     }
 
@@ -227,7 +227,7 @@ void HikRobot::set_float_value(const std::string& name, double value) {
     unsigned int ret = MV_CC_SetFloatValue(handle_, name.c_str(), value);
 
     if (ret != MV_OK) {
-        tools::logger()->warn("MV_CC_SetFloatValue(\"{}\", {}) failed: {:#x}", name, value, ret);
+        LOG_WARN("HIKROBOT", "MV_CC_SetFloatValue(\"{}\", {}) failed: {:#x}", name, value, ret);
     }
 }
 
@@ -235,7 +235,7 @@ void HikRobot::set_enum_value(const std::string& name, unsigned int value) {
     unsigned int ret = MV_CC_SetEnumValue(handle_, name.c_str(), value);
 
     if (ret != MV_OK) {
-        tools::logger()->warn("MV_CC_SetEnumValue(\"{}\", {}) failed: {:#x}", name, value, ret);
+        LOG_WARN("HIKROBOT", "MV_CC_SetEnumValue(\"{}\", {}) failed: {:#x}", name, value, ret);
     }
 }
 
@@ -243,7 +243,7 @@ void HikRobot::set_vid_pid(const std::string& vid_pid) {
     // 解析十六进制VID/PID字符串
     auto index = vid_pid.find(':');
     if (index == std::string::npos) {
-        tools::logger()->warn("Invalid vid_pid: \"{}\"", vid_pid);
+        LOG_WARN("HIKROBOT", "Invalid vid_pid: \"{}\"", vid_pid);
         return;
     }
 
@@ -254,7 +254,7 @@ void HikRobot::set_vid_pid(const std::string& vid_pid) {
         vid_ = std::stoi(vid_str, 0, 16);
         pid_ = std::stoi(pid_str, 0, 16);
     } catch (const std::exception&) {
-        tools::logger()->warn("Invalid vid_pid: \"{}\"", vid_pid);
+        LOG_WARN("HIKROBOT", "Invalid vid_pid: \"{}\"", vid_pid);
     }
 }
 
@@ -266,14 +266,14 @@ void HikRobot::reset_usb() const {
     // 参考usb-reset实现，直接复位设备比等待内核恢复更快
     auto handle = libusb_open_device_with_vid_pid(NULL, vid_, pid_);
     if (!handle) {
-        tools::logger()->warn("Unable to open usb!");
+        LOG_WARN("HIKROBOT", "Unable to open usb!");
         return;
     }
 
     if (libusb_reset_device(handle)) {
-        tools::logger()->warn("Unable to reset usb!");
+        LOG_WARN("HIKROBOT", "Unable to reset usb!");
     } else {
-        tools::logger()->info("Reset usb successfully :)");
+        LOG_INFO("HIKROBOT", "Reset usb successfully :)");
     }
 
     libusb_close(handle);

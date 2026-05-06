@@ -59,7 +59,7 @@ YOLO11::YOLO11(const std::string& config_path, bool debug)
 
 std::list<Armor> YOLO11::detect(const cv::Mat& raw_img, int frame_count) {
     if (raw_img.empty()) {
-        tools::logger()->warn("Empty img!, camera drop!");
+        LOG_WARN("YOLO11", "Empty img!, camera drop!");
         return std::list<Armor>();
     }
 
