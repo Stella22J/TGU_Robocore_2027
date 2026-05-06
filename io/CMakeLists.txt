@@ -8,6 +8,7 @@ add_library(io STATIC
         cboard/cboard.cpp
         imu/imu.cpp
         serial/serial.cpp
+        gimbal/gimbal.cpp
 )
 
 target_include_directories(io
