@@ -5,5 +5,4 @@
 tmp/
 build/
 
-*.txt
 *.log
