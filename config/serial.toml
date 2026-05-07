@@ -1,6 +1,5 @@
 # 控制板通信配置文件
 
-[cborad]
 # IMU 四元数 CAN ID。
 quaternion_canid = 0x01
 

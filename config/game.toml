@@ -1,6 +1,5 @@
 # 比赛/决策配置文件
 
-[game]
 # 敌方颜色：red 或 blue。
 enemy_color = "blue"
 

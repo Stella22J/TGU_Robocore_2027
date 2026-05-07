@@ -1,6 +1,5 @@
 # 相机配置文件
 
-[camera]
 # 主工业相机类型：hikrobot / mindvision 等。
 camera_name = "hikrobot"
 

@@ -26,7 +26,7 @@ using namespace std::chrono;
 // 启动参数：传入 TOML 配置文件所在目录，默认读取 configs 目录。
 const std::string keys =
   "{help h usage ? |         | 输出命令行参数说明}"
-  "{@config-dir    | configs | TOML配置文件目录，例如 configs }";
+  "{@config-dir    | config | TOML配置文件目录，例如 configs }";
 
 int main(int argc, char * argv[])
 {

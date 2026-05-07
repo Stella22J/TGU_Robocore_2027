@@ -7,7 +7,6 @@
 
 #include "io/camera.hpp"
 #include "io/cboard//cboard.hpp"
-#include "io/ros2/ros2.hpp"
 #include "io/usbcamera/usbcamera.hpp"
 #include "app/auto_aim/yolo.hpp"
 #include "app/auto_aim/solver.hpp"
@@ -46,7 +45,6 @@ int main(int argc, char * argv[])
   auto game_config = config_dir + "/game.toml";
   auto serial_config = config_dir + "/serial.toml";
 
-  io::ROS2 ros2;
   io::CBoard cboard(serial_config);
   io::Camera camera(camera_config);
   io::Camera back_camera(camera_config);
@@ -76,11 +74,7 @@ int main(int argc, char * argv[])
 
     auto armors = yolo.detect(img);
 
-    decider.get_invincible_armor(ros2.subscribe_enemy_status());
-
     decider.armor_filter(armors);
-
-    // decider.get_auto_aim_target(armors, ros2.subscribe_autoaim_target());
 
     decider.set_priority(armors);
 
@@ -98,11 +92,6 @@ int main(int argc, char * argv[])
     command.shoot = shooter.shoot(command, aimer, targets, gimbal_pos);
 
     cboard.send(command);
-
-    /// ROS2通信
-    Eigen::Vector4d target_info = decider.get_target_info(armors, targets);
-
-    ros2.publish(target_info);
   }
   return 0;
 }
