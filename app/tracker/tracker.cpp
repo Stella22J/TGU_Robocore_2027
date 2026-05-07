@@ -37,7 +37,7 @@ std::list<Target> Tracker::track(std::list<Armor>& armors, std::chrono::steady_c
 
     // 时间间隔过长，说明可能发生了相机离线
     if (state_ != "lost" && dt > 0.1) {
-        tools::logger()->warn("[Tracker] Large dt: {:.3f}s", dt);
+        LOG_WARN("Tracker", "Large dt: {:.3f}s", dt);
         state_ = "lost";
     }
     // 过滤掉非我方装甲板
@@ -75,7 +75,7 @@ std::list<Target> Tracker::track(std::list<Armor>& armors, std::chrono::steady_c
 
     // 发散检测
     if (state_ != "lost" && target_.diverged()) {
-        tools::logger()->debug("[Tracker] Target diverged!");
+        LOG_DEBUG("Tracker", "Target diverged!");
         state_ = "lost";
         return {};
     }
@@ -84,7 +84,7 @@ std::list<Target> Tracker::track(std::list<Armor>& armors, std::chrono::steady_c
     if (std::accumulate(target_.ekf().recent_nis_failures.begin(),
                         target_.ekf().recent_nis_failures.end(),
                         0) >= (0.4 * target_.ekf().window_size)) {
-        tools::logger()->debug("[Target] Bad Converge Found!");
+        LOG_DEBUG("Target", "Bad Converge Found!");
         state_ = "lost";
         return {};
     }
@@ -111,7 +111,7 @@ Tracker::track(const std::vector<omniperception::DetectionResult>& detection_que
 
     // 时间间隔过长，说明可能发生了相机离线
     if (state_ != "lost" && dt > 0.1) {
-        tools::logger()->warn("[Tracker] Large dt: {:.3f}s", dt);
+        LOG_WARN("Tracker", "Large dt: {:.3f}s", dt);
         state_ = "lost";
     }
 
@@ -135,7 +135,7 @@ Tracker::track(const std::vector<omniperception::DetectionResult>& detection_que
     else if (state_ == "tracking" && !armors.empty() &&
              armors.front().priority < target_.priority) {
         found = set_target(armors, t);
-        tools::logger()->debug("auto_aim switch target to {}", ARMOR_NAMES[armors.front().name]);
+        LOG_DEBUG("TRACKER", "auto_aim switch target to {}", ARMOR_NAMES[armors.front().name]);
     }
 
     // 此时全向感知相机画面中出现了优先级更高的装甲板，切换目标
@@ -146,7 +146,7 @@ Tracker::track(const std::vector<omniperception::DetectionResult>& detection_que
             temp_target.armors, t, temp_target.delta_yaw, temp_target.delta_pitch};
         omni_target_priority_ = temp_target.armors.front().priority;
         found = false;
-        tools::logger()->debug("omniperception find higher priority target");
+        LOG_DEBUG("TRACKER", "omniperception find higher priority target");
     }
 
     else if (state_ == "switching") {
@@ -167,7 +167,7 @@ Tracker::track(const std::vector<omniperception::DetectionResult>& detection_que
 
     // 发散检测
     if (state_ != "lost" && target_.diverged()) {
-        tools::logger()->debug("[Tracker] Target diverged!");
+        LOG_DEBUG("Tracker", "Target diverged!");
         state_ = "lost";
         return {switch_target, {}}; // 返回switch_target和空的targets
     }

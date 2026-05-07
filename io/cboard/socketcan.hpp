@@ -85,7 +85,7 @@ class SocketCAN {
         }
 
         close();
-        tools::logger()->info("SocketCAN destructed.");
+        LOG_INFO("SOCKETCAN", "SocketCAN destructed.");
     }
 
     /**
@@ -188,14 +188,14 @@ class SocketCAN {
                 try {
                     read();
                 } catch (const std::exception& e) {
-                    tools::logger()->warn("SocketCAN::read() failed: {}", e.what());
+                    LOG_WARN("SOCKETCAN", "SocketCAN::read() failed: {}", e.what());
                     ok_ = false;
                     break;
                 }
             }
         });
 
-        tools::logger()->info("SocketCAN opened.");
+        LOG_INFO("SOCKETCAN", "SocketCAN opened.");
     }
 
     /**
@@ -207,7 +207,7 @@ class SocketCAN {
         try {
             open();
         } catch (const std::exception& e) {
-            tools::logger()->warn("SocketCAN::open() failed: {}", e.what());
+            LOG_WARN("SOCKETCAN", "SocketCAN::open() failed: {}", e.what());
         }
     }
 

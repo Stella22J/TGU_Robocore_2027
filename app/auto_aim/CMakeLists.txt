@@ -20,7 +20,13 @@ target_include_directories(auto_aim PUBLIC
 target_link_libraries(auto_aim PUBLIC
         io
         tools
-        ${OpenCV_LIBS}
+        opencv_core
+        opencv_imgproc
+        opencv_imgcodecs
+        opencv_videoio
+        opencv_highgui
+        opencv_calib3d
+        opencv_dnn
         Eigen3::Eigen
         openvino::runtime
         spdlog::spdlog

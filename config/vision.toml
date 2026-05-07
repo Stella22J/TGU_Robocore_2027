@@ -1,40 +1,96 @@
 #####-----神经网络参数-----#####
+
+# 使用的 YOLO 模型名称。
 yolo_name = "yolov5"
+
+# 装甲板数字/类别分类模型路径。
 classify_model = "assets/tiny_resnet.onnx"
+
+# YOLO模型路径。
 yolo11_model_path = "assets/yolo11.xml"
 yolov8_model_path = "assets/yolov8.xml"
 yolov5_model_path = "assets/yolov5.xml"
+
+# 推理设备。
 device = "CPU"
+
+# YOLO 检测置信度阈值。
 min_confidence = 0.8
+
+# 是否启用传统视觉方法。
 use_traditional = true
 
+
 #####-----ROI-----#####
+
+# 图像感兴趣区域 ROI。
+# 只在该区域内进行检测，可以减少计算量并过滤无关区域。
+# x/y 表示左上角坐标，width/height 表示宽高。
 roi = { x = 420, y = 50, width = 600, height = 600 }
 
 
 #####-----传统方法参数-----#####
+
+# 二值化阈值，用于传统灯条识别时分割亮区域。
 threshold = 150
-max_angle_error = 45 # degree
+
+# 灯条最大角度误差，单位 degree。
+max_angle_error = 45
+
+# 灯条最小长宽比。
 min_lightbar_ratio = 1.5
+
+# 灯条最大长宽比。
 max_lightbar_ratio = 20
+
+# 灯条最小长度。
 min_lightbar_length = 8
+
+# 装甲板最小宽高比。
 min_armor_ratio = 1
+
+# 装甲板最大宽高比。
 max_armor_ratio = 5
+
+# 左右灯条长度比例上限。
 max_side_ratio = 1.5
-max_rectangular_error = 25 # degree
+
+# 装甲板矩形误差上限，单位 degree。
+max_rectangular_error = 25
 
 #####-----tracker参数-----#####
+
+# 目标进入稳定跟踪前，需要连续检测到的次数。
 min_detect_count = 5
+
+# 目标临时丢失允许的最大帧数。
 max_temp_lost_count = 15
 
+
 #####-----aimer参数-----#####
-yaw_offset = -2.5 # degree -2.5
-pitch_offset = 3 # degree 2
-comming_angle = 60 # degree
-leaving_angle = 20 # degree
+
+# yaw 方向瞄准补偿，单位 degree。
+yaw_offset = -2.5
+
+# pitch 方向瞄准补偿，单位 degree。
+pitch_offset = 3
+
+# 目标接近角阈值，单位 degree。
+comming_angle = 60
+
+# 目标离开角阈值，单位 degree。
+leaving_angle = 20
 
 #####-----shooter参数-----#####
-first_tolerance = 3 # 近距离射击容差，degree
-second_tolerance = 2 # 远距离射击容差，degree
-judge_distance = 2 # 距离判断阈值
-auto_fire = true # 是否由自瞄控制射击
+
+# 近距离射击角度容差，单位 degree。
+first_tolerance = 3
+
+# 远距离射击角度容差，单位 degree。
+second_tolerance = 2
+
+# 距离判断阈值。
+judge_distance = 2
+
+# 是否允许自瞄自动控制开火。
+auto_fire = true

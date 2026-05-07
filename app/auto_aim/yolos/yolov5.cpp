@@ -60,7 +60,7 @@ YOLOV5::YOLOV5(const std::string& config_path, bool debug)
 
 std::list<Armor> YOLOV5::detect(const cv::Mat& raw_img, int frame_count) {
     if (raw_img.empty()) {
-        tools::logger()->warn("Empty img!, camera drop!");
+        LOG_WARN("YOLOV5", "Empty img!, camera drop!");
         return std::list<Armor>();
     }
 
@@ -251,7 +251,7 @@ void YOLOV5::draw_detections(const cv::Mat& img, const std::list<Armor>& armors,
 
 void YOLOV5::save(const Armor& armor) const {
     auto file_name = fmt::format("{:%Y-%m-%d_%H-%M-%S}", std::chrono::system_clock::now());
-    auto img_path = fmt::format("{}/{}_{}.jpg", save_path_, armor.name, file_name);
+    auto img_path = fmt::format("{}/{}_{}.jpg", save_path_, static_cast<int>(armor.name), file_name);
     cv::imwrite(img_path, tmp_img_);
 }
 

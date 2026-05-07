@@ -1,43 +1,104 @@
-/**
- * @file logger.cpp
- * @brief 全局日志器实现。
- *
- * 本文件基于 spdlog 创建并维护一个全局 logger 实例，支持控制台彩色输出和文件日志输出。
- *
- * @namespace tools
- */
+//
+// Created by tgu on 2026/4/14.
+//
 
 #include "logger.hpp"
 
-#include <fmt/chrono.h>
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/spdlog.h>
-
 #include <chrono>
-#include <string>
+#include <ctime>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 
 namespace tools {
-std::shared_ptr<spdlog::logger> logger_ = nullptr;
+    Logger &Logger::instance() {
+        static Logger inst;
+        return inst;
+    }
 
-void set_logger() {
-    auto file_name = fmt::format("logs/{:%Y-%m-%d_%H-%M-%S}.log", std::chrono::system_clock::now());
-    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(file_name, true);
-    file_sink->set_level(spdlog::level::debug);
+    Logger::~Logger() {
+        if (ofs_.is_open()) {
+            ofs_.close();
+        }
+    }
 
-    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    console_sink->set_level(spdlog::level::debug);
+    void Logger::init(const LoggerConfig &config) {
+        std::lock_guard<std::mutex> lock(mutex_);
 
-    logger_ =
-        std::make_shared<spdlog::logger>("", spdlog::sinks_init_list{file_sink, console_sink});
-    logger_->set_level(spdlog::level::debug);
-    logger_->flush_on(spdlog::level::info);
-}
+        level_ = config.level;
+        console_ = config.enable_console;
+        file_ = config.enable_file;
 
-std::shared_ptr<spdlog::logger> logger() {
-    if (!logger_)
-        set_logger();
-    return logger_;
-}
+        if (file_) {
+            ofs_.open(config.file_path, std::ios::out | std::ios::app);
+            if (!ofs_.is_open()) {
+                file_ = false;
+            }
+        }
+    }
 
+    void Logger::log(LogLevel level,
+                     const std::string &module,
+                     const std::string &msg,
+                     const char *file,
+                     int line) {
+        if (level < level_) return;
+
+        std::lock_guard<std::mutex> lock(mutex_);
+
+        std::string text = format(level, module, msg, file, line);
+
+        if (console_) {
+            (level >= LogLevel::Warn ? std::cerr : std::cout) << text << '\n';
+        }
+
+        if (file_ && ofs_.is_open()) {
+            ofs_ << text << '\n';
+        }
+    }
+
+    std::string Logger::format(LogLevel level,
+                               const std::string &module,
+                               const std::string &msg,
+                               const char *file,
+                               int line) const {
+        using namespace std::chrono;
+
+        auto now = system_clock::now();
+        auto t = system_clock::to_time_t(now);
+
+        std::tm tm{};
+#if defined(_WIN32)
+        localtime_s(&tm, &t);
+#else
+        localtime_r(&t, &tm);
+#endif
+
+        std::ostringstream ss;
+
+        ss << "[" << std::put_time(&tm, "%H:%M:%S") << "] ";
+
+        switch (level) {
+            case LogLevel::Debug: ss << "[DEBUG] ";
+                break;
+            case LogLevel::Info: ss << "[INFO ] ";
+                break;
+            case LogLevel::Warn: ss << "[WARN ] ";
+                break;
+            case LogLevel::Error: ss << "[ERROR] ";
+                break;
+            default: break;
+        }
+
+        // 提取文件名
+        std::string f(file);
+        auto pos = f.find_last_of("/\\");
+        if (pos != std::string::npos) f = f.substr(pos + 1);
+
+        ss << "[" << module << "] "
+                << "[" << f << ":" << line << "] "
+                << msg;
+
+        return ss.str();
+    }
 } // namespace tools

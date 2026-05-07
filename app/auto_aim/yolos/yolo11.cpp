@@ -59,7 +59,7 @@ YOLO11::YOLO11(const std::string& config_path, bool debug)
 
 std::list<Armor> YOLO11::detect(const cv::Mat& raw_img, int frame_count) {
     if (raw_img.empty()) {
-        tools::logger()->warn("Empty img!, camera drop!");
+        LOG_WARN("YOLO11", "Empty img!, camera drop!");
         return std::list<Armor>();
     }
 
@@ -253,7 +253,7 @@ void YOLO11::draw_detections(const cv::Mat& img, const std::list<Armor>& armors,
 
 void YOLO11::save(const Armor& armor) const {
     auto file_name = fmt::format("{:%Y-%m-%d_%H-%M-%S}", std::chrono::system_clock::now());
-    auto img_path = fmt::format("{}/{}_{}.jpg", save_path_, armor.name, file_name);
+    auto img_path = fmt::format("{}/{}_{}.jpg", save_path_, static_cast<int>(armor.name), file_name);
     cv::imwrite(img_path, tmp_img_);
 }
 

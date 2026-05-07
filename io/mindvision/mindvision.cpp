@@ -25,7 +25,7 @@ MindVision::MindVision(double exposure_ms, double gamma, const std::string& vid_
 
     // libusb只用于异常恢复，失败时仍允许SDK先尝试打开相机
     if (libusb_init(NULL)) {
-        tools::logger()->warn("Unable to init libusb!");
+        LOG_WARN("MINDVISION", "Unable to init libusb!");
     }
 
     // 构造阶段先打开一次，守护线程负责后续失败重试
@@ -64,7 +64,7 @@ MindVision::~MindVision() {
 
     close();
 
-    tools::logger()->info("Mindvision destructed.");
+    LOG_INFO("MINDVISION", "Mindvision destructed.");
 }
 
 void MindVision::read(cv::Mat& img, std::chrono::steady_clock::time_point& timestamp) {
@@ -128,7 +128,7 @@ void MindVision::open() {
             auto timestamp = std::chrono::steady_clock::now();
 
             if (status != CAMERA_STATUS_SUCCESS) {
-                tools::logger()->warn("Camera dropped!");
+                LOG_WARN("MINDVISION", "Camera dropped!");
                 ok_ = false;
                 break;
             }
@@ -142,7 +142,7 @@ void MindVision::open() {
         }
     }};
 
-    tools::logger()->info("Mindvision opened.");
+    LOG_INFO("MINDVISION", "Mindvision opened.");
 }
 
 void MindVision::try_open() {
@@ -150,7 +150,7 @@ void MindVision::try_open() {
         // 打开失败由异常路径记录，守护线程后续继续重试
         open();
     } catch (const std::exception& e) {
-        tools::logger()->warn("{}", e.what());
+        LOG_WARN("MINDVISION", "{}", e.what());
     }
 }
 
@@ -168,7 +168,7 @@ void MindVision::set_vid_pid(const std::string& vid_pid) {
     // 解析十六进制VID/PID字符串
     auto index = vid_pid.find(':');
     if (index == std::string::npos) {
-        tools::logger()->warn("Invalid vid_pid: \"{}\"", vid_pid);
+        LOG_WARN("MINDVISION", "Invalid vid_pid: \"{}\"", vid_pid);
         return;
     }
 
@@ -179,7 +179,7 @@ void MindVision::set_vid_pid(const std::string& vid_pid) {
         vid_ = std::stoi(vid_str, 0, 16);
         pid_ = std::stoi(pid_str, 0, 16);
     } catch (const std::exception&) {
-        tools::logger()->warn("Invalid vid_pid: \"{}\"", vid_pid);
+        LOG_WARN("MINDVISION", "Invalid vid_pid: \"{}\"", vid_pid);
     }
 }
 
@@ -191,14 +191,14 @@ void MindVision::reset_usb() const {
     // 参考usb-reset实现，直接复位设备比等待内核恢复更快
     auto handle = libusb_open_device_with_vid_pid(NULL, vid_, pid_);
     if (!handle) {
-        tools::logger()->warn("Unable to open usb!");
+        LOG_WARN("MINDVISION", "Unable to open usb!");
         return;
     }
 
     if (libusb_reset_device(handle)) {
-        tools::logger()->warn("Unable to reset usb!");
+        LOG_WARN("MINDVISION", "Unable to reset usb!");
     } else {
-        tools::logger()->info("Reset usb successfully :)");
+        LOG_INFO("MINDVISION", "Reset usb successfully :)");
     }
 
     libusb_close(handle);

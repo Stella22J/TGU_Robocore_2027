@@ -11,13 +11,23 @@ set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 find_package(Boost CONFIG REQUIRED)
-find_package(OpenCV REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(ARAVIS REQUIRED aravis-0.10)
 find_package(Eigen3 REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(fmt REQUIRED)
 find_package(nlohmann_json REQUIRED)
+find_package(OpenCV REQUIRED COMPONENTS
+        core
+        imgproc
+        imgcodecs
+        videoio
+        highgui
+        dnn
+        calib3d
+        features2d
+        flann
+)
 
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${ARAVIS_INCLUDE_DIRS})

@@ -27,11 +27,9 @@ inline toml::table load(const std::string & path)
   try {
     return toml::parse_file(path);
   } catch (const toml::parse_error & e) {
-    logger()->error(
-      "[TOML] Failed to parse file: {}\n"
-      "[TOML] Error: {}\n"
-      "[TOML] Source: {}:{}",
-      path, e.description(), e.source().begin.line, e.source().begin.column);
+    LOG_ERROR("TOML", "Failed to parse file: {}\n"
+      "Error: {}\n"
+      "Source: {}:{}", path, e.description(), e.source().begin.line, e.source().begin.column);
     exit(1);
   }
 }
@@ -52,7 +50,7 @@ inline T read(const toml::table & table, const std::string & key)
     return *value;
   }
 
-  logger()->error("[TOML] {} not found or type mismatch!", key);
+  LOG_ERROR("TOML", "{} not found or type mismatch!", key);
   exit(1);
 }
 
@@ -82,7 +80,7 @@ inline const toml::table & read_table(const toml::table & table, const std::stri
     return *child;
   }
 
-  logger()->error("[TOML] {} not found or type mismatch!", key);
+  LOG_ERROR("TOML", "{} not found or type mismatch!", key);
   exit(1);
 }
 
@@ -98,7 +96,7 @@ inline std::vector<T> read_array(const toml::table & table, const std::string & 
 {
   const auto * array = table[key].as_array();
   if (array == nullptr) {
-    logger()->error("[TOML] {} not found or type mismatch!", key);
+    LOG_ERROR("TOML", "{} not found or type mismatch!", key);
     exit(1);
   }
 
@@ -107,7 +105,7 @@ inline std::vector<T> read_array(const toml::table & table, const std::string & 
   for (const auto & item : *array) {
     auto value = item.value<T>();
     if (!value) {
-      logger()->error("[TOML] {} contains type mismatch!", key);
+      LOG_ERROR("TOML", "{} contains type mismatch!", key);
       exit(1);
     }
     values.emplace_back(*value);

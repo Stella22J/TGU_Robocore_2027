@@ -18,7 +18,7 @@
 #include <thread>
 #include <vector>
 
-#include "tasks/auto_aim/yolo.hpp"
+#include "app/auto_aim/yolo.hpp"
 #include "tools/logger.hpp"
 
 namespace tools {
@@ -59,14 +59,14 @@ class OrderedQueue {
             buffer_.clear();
             current_id_ = 0;
         }
-        tools::logger()->info("OrderedQueue destroyed, queue and buffer cleared.");
+        LOG_INFO("THREAD_POOL", "OrderedQueue destroyed, queue and buffer cleared.");
     }
 
     void enqueue(const tools::Frame& item) {
         std::lock_guard<std::mutex> lock(mutex_);
 
         if (item.id < current_id_) {
-            tools::logger()->warn("small id");
+            LOG_WARN("THREAD_POOL", "small id");
             return;
         }
 

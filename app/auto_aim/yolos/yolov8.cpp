@@ -64,7 +64,7 @@ YOLOV8::YOLOV8(const std::string& config_path, bool debug)
 
 std::list<Armor> YOLOV8::detect(const cv::Mat& raw_img, int frame_count) {
     if (raw_img.empty()) {
-        tools::logger()->warn("Empty img!, camera drop!");
+        LOG_WARN("YOLOV8", "Empty img!, camera drop!");
         return std::list<Armor>();
     }
 
@@ -266,7 +266,7 @@ cv::Mat YOLOV8::get_pattern(const cv::Mat& bgr_img, const Armor& armor) const {
 
 void YOLOV8::save(const Armor& armor) const {
     auto file_name = fmt::format("{:%Y-%m-%d_%H-%M-%S}", std::chrono::system_clock::now());
-    auto img_path = fmt::format("{}/{}_{}.jpg", save_path_, armor.name, file_name);
+    auto img_path = fmt::format("{}/{}_{}.jpg", save_path_, static_cast<int>(armor.name), file_name);
     cv::imwrite(img_path, armor.pattern);
 }
 

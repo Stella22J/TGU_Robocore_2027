@@ -1,8 +1,14 @@
-#####-----cboard参数-----#####
-[cborad]
-quaternion_canid = 0x01
-bullet_speed_canid = 0x101
-send_canid = 0xff
-can_interface = "can0"
+# 控制板通信配置文件
 
-#TODO
+[cborad]
+# IMU 四元数 CAN ID。
+quaternion_canid = 0x01
+
+# 弹速 CAN ID。
+bullet_speed_canid = 0x101
+
+# 发送控制命令的 CAN ID。
+send_canid = 0xff
+
+# CAN 设备名。
+can_interface = "can0"

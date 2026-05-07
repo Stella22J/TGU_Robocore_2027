@@ -36,8 +36,18 @@ endif()
 
 find_package(Threads REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED CONFIG)
+find_package(OpenCV REQUIRED COMPONENTS
+        core
+        imgproc
+        imgcodecs
+        videoio
+        highgui
+        dnn
+        calib3d
+        features2d
+        flann
+)
 
 target_link_directories(io
         PUBLIC
@@ -47,9 +57,15 @@ target_link_directories(io
 target_link_libraries(io
         PUBLIC
         Eigen3::Eigen
-        ${OpenCV_LIBS}
+        opencv_core
+        opencv_imgproc
+        opencv_imgcodecs
+        opencv_videoio
+        opencv_highgui
+        opencv_calib3d
+        opencv_dnn
         Threads::Threads
-        HikrobotSDK
-        MindvisionSDK
+        MvCameraControl
+        MVSDK
         usb-1.0
 )

@@ -1,17 +1,93 @@
-/**
- * @file logger.hpp
- * @brief 全局日志器接口声明。
- * @namespace tools
- */
+//
+// Created by tgu on 2026/4/14.
+//
 
-#ifndef TOOLS__LOGGER_HPP
-#define TOOLS__LOGGER_HPP
+#ifndef TGU_ROBOCORE_2027_LOGGER_HPP
+#define TGU_ROBOCORE_2027_LOGGER_HPP
 
-#include <spdlog/spdlog.h>
+#pragma once
+
+#include <fstream>
+#include <mutex>
+#include <string>
+#include <fmt/format.h>
 
 namespace tools {
-std::shared_ptr<spdlog::logger> logger();
+    enum class LogLevel {
+        Debug = 0,
+        Info,
+        Warn,
+        Error,
+        Off
+    };
 
+    struct LoggerConfig {
+        LogLevel level = LogLevel::Debug;
+        bool enable_console = true;
+        bool enable_file = false;
+        std::string file_path = "log.txt";
+    };
+
+    class Logger {
+    public:
+        static Logger &instance();
+
+        void init(const LoggerConfig &config);
+
+        void log(LogLevel level,
+                 const std::string &module,
+                 const std::string &msg,
+                 const char *file,
+                 int line);
+
+    private:
+        Logger() = default;
+
+        ~Logger();
+
+        std::string format(LogLevel level,
+                           const std::string &module,
+                           const std::string &msg,
+                           const char *file,
+                           int line) const;
+
+    private:
+        LogLevel level_ = LogLevel::Debug;
+        bool console_ = true;
+        bool file_ = false;
+
+        std::ofstream ofs_;
+        std::mutex mutex_;
+    };
 } // namespace tools
 
-#endif // TOOLS__LOGGER_HPP
+
+#define LOG_INFO(module, fmt_str, ...) \
+::tools::Logger::instance().log( \
+::tools::LogLevel::Info, module, \
+fmt::format(fmt_str __VA_OPT__(,) __VA_ARGS__), \
+__FILE__, __LINE__)
+
+#ifdef NDEBUG
+#define LOG_DEBUG(module, fmt_str, ...) ((void)0)
+#else
+#define LOG_DEBUG(module, fmt_str, ...) \
+::tools::Logger::instance().log( \
+::tools::LogLevel::Debug, module, \
+fmt::format(fmt_str __VA_OPT__(,) __VA_ARGS__), \
+__FILE__, __LINE__)
+#endif
+
+#define LOG_WARN(module, fmt_str, ...) \
+::tools::Logger::instance().log( \
+::tools::LogLevel::Warn, module, \
+fmt::format(fmt_str __VA_OPT__(,) __VA_ARGS__), \
+__FILE__, __LINE__)
+
+#define LOG_ERROR(module, fmt_str, ...) \
+::tools::Logger::instance().log( \
+::tools::LogLevel::Error, module, \
+fmt::format(fmt_str __VA_OPT__(,) __VA_ARGS__), \
+__FILE__, __LINE__)
+
+#endif //TGU_ROBOCORE_2027_LOGGER_HPP

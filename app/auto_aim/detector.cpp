@@ -264,7 +264,7 @@ bool Detector::check_name(const Armor& armor) const {
 
     // 出现 5号 则显示 debug 信息。但不过滤。
     if (armor.name == ArmorName::five)
-        tools::logger()->debug("See pattern 5");
+        LOG_DEBUG("DETECTOR", "See pattern 5");
 
     return name_ok && confidence_ok;
 }
@@ -276,8 +276,7 @@ bool Detector::check_type(const Armor& armor) const {
 
     // 保存异常的图案，用于分类器的迭代
     if (!name_ok) {
-        tools::logger()->debug("see strange armor: {} {}", ARMOR_TYPES[armor.type],
-                               ARMOR_NAMES[armor.name]);
+        LOG_DEBUG("DETECTOR", "see strange armor: {} {}", ARMOR_TYPES[armor.type], ARMOR_NAMES[armor.name]);
         save(armor);
     }
 
@@ -351,7 +350,7 @@ cv::Point2f Detector::get_center_norm(const cv::Mat& bgr_img, const cv::Point2f&
 
 void Detector::save(const Armor& armor) const {
     auto file_name = fmt::format("{:%Y-%m-%d_%H-%M-%S}", std::chrono::system_clock::now());
-    auto img_path = fmt::format("{}/{}_{}.jpg", save_path_, armor.name, file_name);
+    auto img_path = fmt::format("{}/{}_{}.jpg", save_path_, static_cast<int>(armor.name), file_name);
     cv::imwrite(img_path, armor.pattern);
 }
 

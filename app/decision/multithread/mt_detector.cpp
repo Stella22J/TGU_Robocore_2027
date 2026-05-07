@@ -39,7 +39,7 @@ MultiThreadDetector::MultiThreadDetector(const std::string& config_path, bool de
     compiled_model_ = core_.compile_model(
         model, device_, ov::hint::performance_mode(ov::hint::PerformanceMode::THROUGHPUT));
 
-    tools::logger()->info("[MultiThreadDetector] initialized !");
+    LOG_INFO("MultiThreadDetector", "initialized !");
 }
 
 void MultiThreadDetector::push(cv::Mat img, std::chrono::steady_clock::time_point t) {

@@ -43,7 +43,7 @@ USBCamera::USBCamera(const std::string& open_name, const std::string& config_pat
             }
 
             if (open_count_ > 20) {
-                tools::logger()->warn("Give up to open {} USB camera", this->device_name);
+                LOG_WARN("USBCAMERA", "Give up to open {} USB camera", this->device_name);
                 // 超过重试次数后主动退出，避免设备不存在时无限重连
                 quit_ = true;
 
@@ -53,7 +53,7 @@ USBCamera::USBCamera(const std::string& open_name, const std::string& config_pat
                 }
 
                 if (capture_thread_.joinable()) {
-                    tools::logger()->warn("Stopping capture thread");
+                    LOG_WARN("USBCAMERA", "Stopping capture thread");
                     capture_thread_.join();
                 }
 
@@ -91,14 +91,14 @@ USBCamera::~USBCamera() {
         capture_thread_.join();
     }
 
-    tools::logger()->info("USBCamera destructed.");
+    LOG_INFO("USBCAMERA", "USBCamera destructed.");
 }
 
 cv::Mat USBCamera::read() {
     std::lock_guard<std::mutex> lock(cap_mutex_);
     // 同步read直接访问VideoCapture，需要持锁避免和采集线程并发
     if (!cap_.isOpened()) {
-        tools::logger()->warn("Failed to read {} USB camera", this->device_name);
+        LOG_WARN("USBCAMERA", "Failed to read {} USB camera", this->device_name);
         return cv::Mat();
     }
 
@@ -122,7 +122,7 @@ void USBCamera::open() {
     std::string true_device_name = "/dev/" + open_name_;
     cap_.open(true_device_name, cv::CAP_V4L);
     if (!cap_.isOpened()) {
-        tools::logger()->warn("Failed to open USB camera");
+        LOG_WARN("USBCAMERA", "Failed to open USB camera");
         return;
     }
 
@@ -150,14 +150,14 @@ void USBCamera::open() {
         device_name = open_name_;
     }
 
-    tools::logger()->info("{} USBCamera opened", device_name);
-    tools::logger()->info("USBCamera fps:{}", cap_.get(cv::CAP_PROP_FPS));
+    LOG_INFO("USBCAMERA", "{} USBCamera opened", device_name);
+    LOG_INFO("USBCAMERA", "USBCamera fps:{}", cap_.get(cv::CAP_PROP_FPS));
 
     capture_thread_ = std::thread{[this] {
         // 采集线程启动后标记状态，供守护线程判断
         ok_ = true;
         std::this_thread::sleep_for(50ms);
-        tools::logger()->info("[{} USB camera] capture thread started ", this->device_name);
+        LOG_INFO("USBCAMERA", "[{} USB camera] capture thread started ", this->device_name);
 
         while (!quit_) {
             std::this_thread::sleep_for(1ms);
@@ -174,7 +174,7 @@ void USBCamera::open() {
             }
 
             if (!success) {
-                tools::logger()->warn("Failed to read frame, exiting capture thread");
+                LOG_WARN("USBCAMERA", "Failed to read frame, exiting capture thread");
                 break;
             }
 
@@ -194,14 +194,14 @@ void USBCamera::try_open() {
         open();
         open_count_++;
     } catch (const std::exception& e) {
-        tools::logger()->warn("{}", e.what());
+        LOG_WARN("USBCAMERA", "{}", e.what());
     }
 }
 
 void USBCamera::close() {
     if (cap_.isOpened()) {
         cap_.release();
-        tools::logger()->info("USB camera released.");
+        LOG_INFO("USBCAMERA", "USB camera released.");
     }
 }
 
