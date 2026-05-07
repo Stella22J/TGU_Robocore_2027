@@ -1,3 +1,6 @@
+#ifndef TOOLS__RANSAC_SINE_FITTER_HPP
+#define TOOLS__RANSAC_SINE_FITTER_HPP
+
 /**
  * @file ransac_sine_fitter.hpp
  * @brief 基于 RANSAC 的正弦曲线拟合接口声明。
@@ -48,3 +51,5 @@ class RansacSineFitter {
 };
 
 } // namespace tools
+
+#endif // TOOLS__RANSAC_SINE_FITTER_HPP

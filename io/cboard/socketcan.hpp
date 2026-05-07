@@ -23,12 +23,10 @@
 
 #include "tools/logger.hpp"
 
-using namespace std::chrono_literals;
+namespace io {
 
 // 固定上限可以避免接收线程中动态分配事件数组
-constexpr int MAX_EVENTS = 10;
-
-namespace io {
+static constexpr int MAX_EVENTS = 10;
 
 /**
  * @brief LinuxSocketCAN通信封装类。
@@ -54,7 +52,7 @@ class SocketCAN {
         // 守护线程负责恢复异常接收线程，避免主流程处理硬件热插拔
         daemon_thread_ = std::thread{[this] {
             while (!quit_) {
-                std::this_thread::sleep_for(100ms);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 // 接收线程正常时守护线程只保持低频检查
                 if (ok_) {
                     continue;
@@ -183,7 +181,7 @@ class SocketCAN {
             ok_ = true;
 
             while (!quit_) {
-                std::this_thread::sleep_for(10us);
+                std::this_thread::sleep_for(std::chrono::microseconds(10));
 
                 try {
                     read();

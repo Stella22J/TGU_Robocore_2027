@@ -36,7 +36,7 @@ bool Serial::open(const std::string& device, int baudrate) {
         is_open_ = true;
         LOG_INFO(MODULE, "{} open success", device);
         return true;
-    } catch (std::exception& e) {
+    } catch (const std::exception& e) {
         LOG_ERROR(MODULE, "{} open failed: {}", device, e.what());
         is_open_ = false;
         return false;
@@ -60,8 +60,14 @@ size_t Serial::write(const uint8_t* data, size_t size) {
     try {
         // 同步写入确保调用返回时数据已交给系统串口缓冲
         return boost::asio::write(serial_, boost::asio::buffer(data, size));
+    } catch (const std::exception& e) {
+        // 异常后标记关闭，让上层可以触发重连或退出
+        LOG_ERROR(MODULE, "write failed: {}", e.what());
+        is_open_ = false;
+        return 0;
     } catch (...) {
         // 异常后标记关闭，让上层可以触发重连或退出
+        LOG_ERROR(MODULE, "write failed: unknown exception");
         is_open_ = false;
         return 0;
     }
@@ -95,8 +101,13 @@ void Serial::spin_once() {
         for (auto& cb : callbacks_) {
             cb(rx_buf_, len);
         }
+    } catch (const std::exception& e) {
+        // 读异常后不在这里重连，避免Serial类私自决定设备恢复策略
+        LOG_ERROR(MODULE, "spin once failed: {}", e.what());
+        is_open_ = false;
     } catch (...) {
         // 读异常后不在这里重连，避免Serial类私自决定设备恢复策略
+        LOG_ERROR(MODULE, "spin once failed: unknown exception");
         is_open_ = false;
     }
 }

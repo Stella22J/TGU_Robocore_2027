@@ -18,8 +18,7 @@ target_include_directories(tools PUBLIC
     ${PROJECT_SOURCE_DIR}
 )
 
-target_link_libraries(tools
-    PUBLIC
+target_link_libraries(tools PUBLIC
     Eigen3::Eigen
     opencv_core
     opencv_imgproc
@@ -33,4 +32,3 @@ target_link_libraries(tools
     Threads::Threads
     fmt::fmt
 )
-

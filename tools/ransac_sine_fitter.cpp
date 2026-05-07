@@ -15,6 +15,8 @@
 
 #include "ransac_sine_fitter.hpp"
 
+#include "tools/logger.hpp"
+
 #include <Eigen/Dense>
 #include <algorithm>
 #include <cmath>
@@ -93,7 +95,11 @@ bool RansacSineFitter::fit_partial_model(const std::vector<std::pair<double, dou
     try {
         params = X.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(Y);
         return true;
+    } catch (const std::exception& e) {
+        LOG_ERROR("RANSAC_SINE_FITTER", "fit partial model failed: {}", e.what());
+        return false;
     } catch (...) {
+        LOG_ERROR("RANSAC_SINE_FITTER", "fit partial model failed: unknown exception");
         return false;
     }
 }
