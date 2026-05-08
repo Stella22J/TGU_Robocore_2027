@@ -4,8 +4,6 @@
 /**
  * @file mindvision.hpp
  * @brief 声明MindVision工业相机驱动。
- *
- * 该类封装MindVisionCamera SDK，并通过CameraBase接口向上层提供带时间戳的图像。
  */
 
 #include <chrono>
@@ -21,14 +19,11 @@ namespace io {
 
 /**
  * @brief MindVision工业相机驱动类。
- *
- * 采集线程负责取图，守护线程负责异常恢复，使相机掉线时不需要重启整个视觉进程。
  */
 class MindVision : public CameraBase {
   public:
     /**
      * @brief 构造MindVision相机对象。
-     *
      * @param exposure_ms 曝光时间，单位ms。
      * @param gamma 伽马参数，设置SDK时会按设备要求放大100倍。
      * @param vid_pid USB设备VID/PID字符串，用于异常恢复时重置USB。
@@ -37,16 +32,13 @@ class MindVision : public CameraBase {
 
     /**
      * @brief 析构MindVision相机对象。
-     *
-     * 析构时结束后台线程并释放SDK句柄，避免相机设备被进程占用。
      */
     ~MindVision() override;
 
     /**
      * @brief 读取一帧图像及其采集时间戳。
-     *
-     * @param[out] img 输出图像。
-     * @param[out] timestamp 图像对应的本机稳态时钟时间戳。
+     * @param img 输出图像。
+     * @param timestamp 图像对应的本机稳态时钟时间戳。
      */
     void read(cv::Mat& img, std::chrono::steady_clock::time_point& timestamp) override;
 
@@ -77,36 +69,27 @@ class MindVision : public CameraBase {
 
     /**
      * @brief 打开并配置MindVision相机。
-     *
-     * 配置和启动采集在同一个函数中完成，便于守护线程在异常后完整重建状态。
      */
     void open();
 
     /**
      * @brief 尝试打开相机。
-     *
-     * 打开失败只记录日志，给守护线程保留下一轮恢复机会。
      */
     void try_open();
 
     /**
      * @brief 关闭MindVision相机。
-     *
-     * 多次调用需要安全，因为析构和异常恢复路径都会触发清理。
      */
     void close();
 
     /**
      * @brief 解析USBVID/PID字符串。
-     *
      * @param vid_pid USB设备VID/PID字符串，格式为"VID:PID"。
      */
     void set_vid_pid(const std::string& vid_pid);
 
     /**
      * @brief 重置USB设备。
-     *
-     * 采集异常后重置USB可以清理驱动或固件层残留状态。
      */
     void reset_usb() const;
 };

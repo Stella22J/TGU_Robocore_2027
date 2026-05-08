@@ -19,8 +19,6 @@
 namespace auto_aim {
 /**
  * @brief 基于OpenVINO的YOLOv5装甲板检测后端，用于老模型或稳定模型部署
- *
- * 后端解析逻辑单独放置，是因为不同YOLO版本的输出维度、类别组织和关键点顺序并不相同
  */
 class YOLOV5 : public YOLOBase {
   public:

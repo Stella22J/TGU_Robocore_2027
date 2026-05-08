@@ -1,8 +1,6 @@
 /**
  * @file shooter.hpp
  * @brief 开火许可判断接口，集中处理自动开火阈值和稳定性判断
- *
- * 该文件随所属模块放置，便于按功能维护，同时保持跨模块接口清晰
  */
 
 #ifndef AUTO_AIM__SHOOTER_HPP
@@ -16,8 +14,6 @@
 namespace auto_aim {
 /**
  * @brief 判断当前控制命令是否稳定到可以开火，避免云台追踪过程中提前发射
- *
- * 开火门控与瞄准解算分离，是为了让安全阈值、自动开火策略和弹道算法可以独立调参
  */
 class Shooter {
   public:

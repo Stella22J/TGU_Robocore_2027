@@ -4,8 +4,6 @@
 /**
  * @file socketcan.hpp
  * @brief 声明LinuxSocketCAN通信封装。
- *
- * 该文件把socket、epoll和重连逻辑封装在一个类中，让上层协议代码只关心CAN帧收发。
  */
 
 #include <linux/can.h>
@@ -25,21 +23,16 @@
 
 namespace io {
 
-// 固定上限可以避免接收线程中动态分配事件数组
+// 固定事件上限
 static constexpr int MAX_EVENTS = 10;
 
 /**
  * @brief LinuxSocketCAN通信封装类。
- *
- * 该类负责打开CAN原始socket、后台接收CAN帧、发送CAN帧，并在接收异常后自动重连。
  */
 class SocketCAN {
   public:
     /**
      * @brief 构造SocketCAN对象。
-     *
-     * 构造时立即尝试打开接口并启动守护线程，使控制板连接恢复对上层透明。
-     *
      * @param interface CAN接口名。
      * @param rx_handler 收到CAN帧后的回调函数。
      */
@@ -69,8 +62,6 @@ class SocketCAN {
 
     /**
      * @brief 析构SocketCAN对象。
-     *
-     * 析构时先通知线程退出再关闭文件描述符，避免接收线程继续访问已关闭的socket。
      */
     ~SocketCAN() {
         quit_ = true;
@@ -88,7 +79,6 @@ class SocketCAN {
 
     /**
      * @brief 发送一帧CAN数据。
-     *
      * @param frame 待发送的CAN帧指针。
      * @throws std::runtime_error socket未打开或写入失败时抛出。
      */
@@ -120,9 +110,6 @@ class SocketCAN {
 
     /**
      * @brief 打开CAN接口并启动接收线程。
-     *
-     * 使用epoll等待可读事件，可以避免接收线程长期阻塞在recv上，析构和异常恢复更可控。
-     *
      * @throws std::runtime_error socket、ioctl、bind或epoll配置失败时抛出。
      */
     void open() {
@@ -198,8 +185,6 @@ class SocketCAN {
 
     /**
      * @brief 尝试打开CAN接口。
-     *
-     * 失败只记录日志，让守护线程可以继续周期性重试。
      */
     void try_open() {
         try {
@@ -211,7 +196,6 @@ class SocketCAN {
 
     /**
      * @brief 读取CAN帧并触发回调。
-     *
      * @throws std::runtime_error epoll或recv失败时抛出。
      */
     void read() {
@@ -237,8 +221,6 @@ class SocketCAN {
 
     /**
      * @brief 关闭CANsocket和epoll句柄。
-     *
-     * 多次调用必须安全，因为异常恢复和析构路径都会清理资源。
      */
     void close() {
         if (socket_fd_ == -1) {

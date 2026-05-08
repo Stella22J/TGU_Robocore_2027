@@ -22,8 +22,6 @@
 namespace omniperception {
 /**
  * @brief 选择全向感知目标并计算粗略云台角度，用于主相机切换到新方向
- *
- * 该层与精确自瞄分离，是为了在主相机完成PnP锁定前，就能根据全向感知结果提前引导云台切换目标
  */
 class Decider {
   public:

@@ -4,8 +4,6 @@
 /**
  * @file hikrobot.hpp
  * @brief 声明HikRobot工业相机驱动。
- *
- * 该类封装HikRobotMVS SDK，向上层提供CameraBase统一接口，并在采集异常时尝试自动恢复。
  */
 
 #include <atomic>
@@ -22,14 +20,11 @@ namespace io {
 
 /**
  * @brief HikRobotUSB工业相机驱动类。
- *
- * 类内使用守护线程和采集线程分离硬件恢复和图像采集，避免相机掉线直接阻塞视觉主流程。
  */
 class HikRobot : public CameraBase {
   public:
     /**
      * @brief 构造HikRobot相机对象。
-     *
      * @param exposure_ms 曝光时间，单位ms。
      * @param gain 相机增益。
      * @param vid_pid USB设备VID/PID字符串，用于异常恢复时重置USB。
@@ -38,18 +33,13 @@ class HikRobot : public CameraBase {
 
     /**
      * @brief 析构HikRobot相机对象。
-     *
-     * 析构时结束守护线程，守护线程退出前会停止采集并释放SDK资源。
      */
     ~HikRobot() override;
 
     /**
      * @brief 读取一帧图像及其采集时间戳。
-     *
-     * 从采集线程维护的队列中取图，可以避免上层直接调用SDK阻塞。
-     *
-     * @param[out] img 输出图像。
-     * @param[out] timestamp 图像对应的本机稳态时钟时间戳。
+     * @param img 输出图像。
+     * @param timestamp 图像对应的本机稳态时钟时间戳。
      */
     void read(cv::Mat& img, std::chrono::steady_clock::time_point& timestamp) override;
 
@@ -77,21 +67,16 @@ class HikRobot : public CameraBase {
 
     /**
      * @brief 启动相机采集。
-     *
-     * 该函数创建SDK句柄、设置参数并启动采集线程，使守护线程可以在异常后完整重建相机状态。
      */
     void capture_start();
 
     /**
      * @brief 停止相机采集并释放SDK资源。
-     *
-     * 停止顺序必须先结束采集线程再关闭SDK句柄，避免线程访问已释放资源。
      */
     void capture_stop();
 
     /**
      * @brief 设置相机浮点参数。
-     *
      * @param name HikRobotSDK参数名。
      * @param value 参数值。
      */
@@ -99,7 +84,6 @@ class HikRobot : public CameraBase {
 
     /**
      * @brief 设置相机枚举参数。
-     *
      * @param name HikRobotSDK参数名。
      * @param value 参数枚举值。
      */
@@ -107,15 +91,12 @@ class HikRobot : public CameraBase {
 
     /**
      * @brief 解析USBVID/PID字符串。
-     *
      * @param vid_pid USB设备VID/PID字符串，格式为"VID:PID"。
      */
     void set_vid_pid(const std::string& vid_pid);
 
     /**
      * @brief 重置USB设备。
-     *
-     * 采集异常后重置USB可以清理部分相机固件或驱动层的异常状态。
      */
     void reset_usb() const;
 };

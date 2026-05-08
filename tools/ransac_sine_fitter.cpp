@@ -1,16 +1,6 @@
 /**
  * @file ransac_sine_fitter.cpp
  * @brief 基于 RANSAC 的正弦曲线拟合实现。
- *
- * 本文件实现 RansacSineFitter 类，用于从时间序列数据中鲁棒拟合正弦模型：
- *
- * y = A * sin(omega * t + phi) + C。
- *
- * 拟合过程中随机采样频率 omega，并通过最小二乘估计线性化后的正弦参数，
- * 再根据残差阈值统计内点数量，保留内点最多的模型作为最优结果。
- * 主要用于存在噪声、异常点或短时观测窗口的周期信号估计场景。
- *
- * @namespace tools
  */
 
 #include "ransac_sine_fitter.hpp"

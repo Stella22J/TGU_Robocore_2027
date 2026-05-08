@@ -4,8 +4,6 @@
 /**
  * @file serial.hpp
  * @brief 声明Boost.Asio串口封装和结构体帧解析工具。
- *
- * 该文件提供同步串口读写和按结构体帧头解析的轻量工具，方便IMU等固定协议设备复用。
  */
 
 #include <boost/asio.hpp>
@@ -19,9 +17,6 @@ namespace io {
 
 /**
  * @brief 固定容量环形缓冲区。
- *
- * 环形缓冲可以在串口字节流错位时逐字节滑动匹配帧头，而不需要频繁移动大块内存。
- *
  * @tparam N 缓冲区容量。
  */
 template <size_t N>
@@ -29,9 +24,6 @@ class RingBuffer {
   public:
     /**
      * @brief 写入一个字节。
-     *
-     * 缓冲区满时覆盖最旧数据，使解析器可以在持续字节流中自动恢复同步。
-     *
      * @param byte 待写入字节。
      */
     void push(uint8_t byte) {
@@ -47,7 +39,6 @@ class RingBuffer {
 
     /**
      * @brief 读取相对队首的字节。
-     *
      * @param idx 相对队首偏移。
      * @return 对应字节。
      */
@@ -55,7 +46,6 @@ class RingBuffer {
 
     /**
      * @brief 丢弃队首若干字节。
-     *
      * @param n 丢弃字节数。
      */
     void pop(size_t n) {
@@ -65,7 +55,6 @@ class RingBuffer {
 
     /**
      * @brief 获取当前缓存字节数。
-     *
      * @return 当前缓存字节数。
      */
     size_t size() const { return size_; }
@@ -79,9 +68,6 @@ class RingBuffer {
 
 /**
  * @brief 基于结构体帧头的串口解析器。
- *
- * 解析器假设协议帧头等于结构体默认值的前2字节，适合固定帧头、固定长度的二进制协议。
- *
  * @tparam T 协议结构体类型。
  * @tparam N 内部环形缓冲区容量。
  */
@@ -90,8 +76,6 @@ class StructParser {
   public:
     /**
      * @brief 构造解析器。
-     *
-     * 从T的默认构造对象提取帧头，避免调用方重复传入协议常量。
      */
     StructParser() {
         T dummy{};
@@ -100,7 +84,6 @@ class StructParser {
 
     /**
      * @brief 输入一个字节并尝试解析完整结构体。
-     *
      * @param byte 输入字节。
      * @param[out] out 解析成功时输出结构体。
      * @return 成功解析完整帧时返回true。
@@ -149,8 +132,6 @@ class StructParser {
 
 /**
  * @brief Boost.Asio同步串口封装。
- *
- * 该类把串口参数设置、同步读写和结构体回调解析封装在一起，降低各设备驱动重复代码量。
  */
 class Serial {
   public:
@@ -161,14 +142,11 @@ class Serial {
 
     /**
      * @brief 析构串口对象。
-     *
-     * 析构时关闭串口，避免设备文件描述符泄漏。
      */
     ~Serial();
 
     /**
      * @brief 打开串口。
-     *
      * @param device 串口设备路径。
      * @param baudrate 波特率。
      * @return 打开成功返回true。
@@ -182,14 +160,12 @@ class Serial {
 
     /**
      * @brief 查询串口是否打开。
-     *
      * @return 串口可用时返回true。
      */
     bool is_open() const;
 
     /**
      * @brief 写入原始字节。
-     *
      * @param data 数据指针。
      * @param size 数据长度。
      * @return 实际写入字节数。
@@ -198,7 +174,6 @@ class Serial {
 
     /**
      * @brief 读取指定长度的原始字节。
-     *
      * @param data 输出缓冲区。
      * @param size 期望读取字节数。
      * @return 实际读取字节数。
@@ -207,7 +182,6 @@ class Serial {
 
     /**
      * @brief 按结构体二进制布局发送数据。
-     *
      * @tparam T 数据结构体类型。
      * @param data 待发送数据。
      * @return 实际写入字节数。
@@ -219,9 +193,6 @@ class Serial {
 
     /**
      * @brief 注册结构体接收回调。
-     *
-     * 回调通过StructParser从字节流中恢复完整结构体，适合固定长度协议帧。
-     *
      * @tparam T 协议结构体类型。
      * @param cb 完整帧回调。
      */
@@ -241,7 +212,6 @@ class Serial {
 
     /**
      * @brief 执行一次非阻塞接收分发。
-     *
      * 该函数适合由外部循环驱动，避免Serial内部强行创建线程。
      */
     void spin_once();

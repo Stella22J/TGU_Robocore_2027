@@ -1,11 +1,6 @@
 /**
  * @file foxglove_comm.cpp
  * @brief Foxglove WebSocket 通信封装实现。
- *
- * 本文件实现 FoxGloveComm 类，用于创建和管理 Foxglove WebSocket Server
- * 主要用于机器人系统中的可视化调试、遥测数据发布和 Foxglove Studio 连接管理。
- *
- * @namespace tools
  */
 
 #include "foxglove_comm.hpp"

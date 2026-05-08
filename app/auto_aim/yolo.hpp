@@ -13,8 +13,6 @@
 namespace auto_aim {
 /**
  * @brief YOLO后端运行时多态接口，使异步检测器和普通检测流程可以复用同一抽象
- *
- * 不同YOLO后端的张量排布不同，因此用统一接口隔离差异，避免上层模块随模型版本变化而改动
  */
 class YOLOBase {
   public:
@@ -40,8 +38,6 @@ class YOLOBase {
 
 /**
  * @brief 根据配置选择并持有一个YOLO后端，避免业务代码直接依赖具体模型版本
- *
- * 外观类让上层模块不直接依赖具体YOLO版本，切换模型时只需要修改配置
  */
 class YOLO {
   public:

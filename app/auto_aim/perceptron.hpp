@@ -21,8 +21,6 @@ namespace omniperception {
 
 /**
  * @brief 为全向感知相机并行运行YOLO推理，让侧后方目标能更早被发现
- *
- * 每个相机独占一个模型实例，避免多个工作线程共享OpenVINO推理状态而引入竞争和额外锁开销
  */
 class Perceptron {
   public:

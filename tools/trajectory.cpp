@@ -1,11 +1,6 @@
 /**
  * @file trajectory.cpp
  * @brief 抛体弹道解算实现。
- *
- * 本文件实现 Trajectory 结构体的构造逻辑，用于在不考虑空气阻力的情况下，
- * 根据弹丸初速度、目标水平距离和目标高度差，计算可行的发射俯仰角和飞行时间。
- *
- * @namespace tools
  */
 
 #include "trajectory.hpp"

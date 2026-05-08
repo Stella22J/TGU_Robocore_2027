@@ -1,6 +1,7 @@
-//
-// Created by tgu on 2026/4/14.
-//
+/**
+ * @file logger.cpp
+ * @brief 轻量级线程安全日志工具实现。
+ */
 
 #include "logger.hpp"
 

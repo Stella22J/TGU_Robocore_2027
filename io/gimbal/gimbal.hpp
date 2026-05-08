@@ -82,8 +82,6 @@ enum class GimbalMode { IDLE, AUTO_AIM, SMALL_BUFF, BIG_BUFF };
 
 /**
  * @brief 云台状态快照
- *
- * 状态和模式分开保存,让控制逻辑可以独立读取运动状态
  */
 struct GimbalState {
     float yaw;
@@ -96,40 +94,29 @@ struct GimbalState {
 
 /**
  * @brief 云台串口通信封装
- *
- * Gimbal负责维护串口连接、后台接收云台状态、缓存IMU姿态并发送视觉控制量
- * 底层Serial已经负责帧头同步,本类只校验CRC并更新业务状态
  */
 class Gimbal {
   public:
     /**
      * @brief 创建云台通信对象
      * @param config_path TOML配置文件路径
-     *
-     * 构造时会打开串口并等待第一帧姿态,这样后续q()不会在没有数据时返回无效姿态
      */
     explicit Gimbal(const std::string& config_path);
 
     /**
      * @brief 销毁云台通信对象
-     *
-     * 析构时主动停止接收线程,避免serial_先析构导致后台线程访问悬空资源
      */
     ~Gimbal();
 
     /**
      * @brief 获取当前云台模式
      * @return 最近一次通过串口接收到的云台模式
-     *
-     * 该接口内部加锁,避免读取时和接收线程更新mode_发生竞争
      */
     GimbalMode mode() const;
 
     /**
      * @brief 获取当前云台状态
      * @return 最近一次通过串口接收到的云台状态快照
-     *
-     * 返回副本可以避免调用方长期持有锁,降低对接收线程的影响
      */
     GimbalState state() const;
 
@@ -137,8 +124,6 @@ class Gimbal {
      * @brief 将云台模式转换为字符串
      * @param mode 待转换的云台模式
      * @return 模式字符串
-     *
-     * 用于日志输出
      */
     std::string str(GimbalMode mode) const;
 

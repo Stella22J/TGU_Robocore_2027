@@ -4,8 +4,6 @@
 /**
  * @file cboard.hpp
  * @brief 声明控制板CAN通信封装。
- *
- * CBoard把控制板协议集中在io模块中，上层只需要读取姿态和发送控制命令，不需要直接处理CANID和字节打包。
  */
 
 #include <Eigen/Geometry>
@@ -36,8 +34,6 @@ const std::vector<std::string> SHOOT_MODES = {"left_shoot", "right_shoot", "both
 
 /**
  * @brief 控制板CAN通信类。
- *
- * 该类负责接收控制板广播的IMU四元数、弹速和模式信息，并按协议发送视觉控制命令。
  */
 class CBoard {
   public:
@@ -48,18 +44,12 @@ class CBoard {
 
     /**
      * @brief 构造控制板通信对象。
-     *
-     * 构造时会读取TOML配置并启动SocketCAN接收线程，因此配置错误应尽早暴露。
-     *
      * @param config_path TOML配置文件路径。
      */
     explicit CBoard(const std::string& config_path);
 
     /**
      * @brief 查询指定时间点的IMU姿态。
-     *
-     * 控制板IMU和相机不同步，使用时间戳插值可以让视觉处理拿到更接近曝光时刻的姿态。
-     *
      * @param timestamp 目标时间戳。
      * @return 插值得到的IMU四元数。
      */
@@ -67,7 +57,6 @@ class CBoard {
 
     /**
      * @brief 发送视觉控制命令。
-     *
      * @param command 视觉控制命令。
      */
     void send(Command command) const;
@@ -90,18 +79,12 @@ class CBoard {
 
     /**
      * @brief 处理收到的CAN帧。
-     *
-     * 回调中只做协议解析和轻量入队，避免阻塞SocketCAN接收线程。
-     *
      * @param frame 收到的CAN帧。
      */
     void callback(const can_frame& frame);
 
     /**
      * @brief 读取TOML配置并返回CAN接口名。
-     *
-     * 该函数顺带填充CANID成员，使构造函数可以在初始化can_前完成协议参数加载。
-     *
      * @param config_path TOML配置文件路径。
      * @return CAN接口名。
      */

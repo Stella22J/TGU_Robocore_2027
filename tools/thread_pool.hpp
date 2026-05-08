@@ -1,11 +1,6 @@
 /**
  * @file thread_pool.hpp
  * @brief 多线程任务池与帧保序队列工具。
- *
- * 本文件定义 Frame 数据结构、YOLO 实例批量创建函数、OrderedQueue 保序队列以及 ThreadPool 线程池。
- * 主要用于提供线程池、按帧 ID 保序输出队列，以及 YOLO 实例批量创建工具；服务于多线程图像推理或自瞄流水线。
- *
- * @namespace tools
  */
 
 #ifndef TOOLS__THREAD_POOL_HPP
@@ -22,14 +17,29 @@
 #include "tools/logger.hpp"
 
 namespace tools {
+/**
+ * @brief 待处理图像帧及其检测上下文。
+ */
 struct Frame {
+    // 帧序号。
     int id;
+    // 图像帧。
     cv::Mat img;
+    //帧时间戳。
     std::chrono::steady_clock::time_point t;
+    // 帧姿态四元数。
     Eigen::Quaterniond q;
+    // 该帧检测到的装甲板列表。
     std::list<auto_aim::Armor> armors;
 };
 
+/**
+ * @brief 创建多个 YOLO11 检测器实例。
+ * @param config_path 检测器配置文件路径。
+ * @param numebr 创建实例数量。
+ * @param debug 是否启用调试模式。
+ * @return YOLO11 检测器实例列表。
+ */
 inline std::vector<auto_aim::YOLO> create_yolo11s(const std::string& config_path, int numebr,
                                                   bool debug) {
     std::vector<auto_aim::YOLO> yolo11s;
@@ -39,6 +49,13 @@ inline std::vector<auto_aim::YOLO> create_yolo11s(const std::string& config_path
     return yolo11s;
 }
 
+/**
+ * @brief 创建多个 YOLOv8 检测器实例。
+ * @param config_path 检测器配置文件路径。
+ * @param numebr 创建实例数量。
+ * @param debug 是否启用调试模式。
+ * @return YOLOv8 检测器实例列表。
+ */
 inline std::vector<auto_aim::YOLO> create_yolov8s(const std::string& config_path, int numebr,
                                                   bool debug) {
     std::vector<auto_aim::YOLO> yolov8s;
@@ -48,9 +65,19 @@ inline std::vector<auto_aim::YOLO> create_yolov8s(const std::string& config_path
     return yolov8s;
 }
 
+/**
+ * @brief 按帧序号保序输出的线程安全队列。
+ */
 class OrderedQueue {
   public:
+    /**
+     * @brief 创建从帧序号 1 开始的保序队列。
+     */
     OrderedQueue() : current_id_(1) {}
+
+    /**
+     * @brief 清空队列与缓存并销毁对象。
+     */
     ~OrderedQueue() {
         {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -62,6 +89,10 @@ class OrderedQueue {
         LOG_INFO("THREAD_POOL", "OrderedQueue destroyed, queue and buffer cleared.");
     }
 
+    /**
+     * @brief 将帧按序放入队列或缓存中。
+     * @param item 待入队帧。
+     */
     void enqueue(const tools::Frame& item) {
         std::lock_guard<std::mutex> lock(mutex_);
 
@@ -90,6 +121,10 @@ class OrderedQueue {
         }
     }
 
+    /**
+     * @brief 阻塞式弹出下一帧。
+     * @return 按序输出的下一帧。
+     */
     tools::Frame dequeue() {
         std::unique_lock<std::mutex> lock(mutex_);
 
@@ -100,7 +135,11 @@ class OrderedQueue {
         return item;
     }
 
-    // 不会阻塞队列
+    /**
+     * @brief 非阻塞式尝试弹出下一帧。
+     * @param item 用于接收弹出帧的引用。
+     * @return 成功弹出返回 true，队列为空返回 false。
+     */
     bool try_dequeue(tools::Frame& item) {
         std::lock_guard<std::mutex> lock(mutex_);
         if (main_queue_.empty()) {
@@ -111,6 +150,10 @@ class OrderedQueue {
         return true;
     }
 
+    /**
+     * @brief 获取主队列与缓存中的总帧数。
+     * @return 总帧数。
+     */
     size_t get_size() {
         return main_queue_.size() + buffer_.size();
     }
@@ -123,8 +166,15 @@ class OrderedQueue {
     std::condition_variable cond_var_;
 };
 
+/**
+ * @brief 固定线程数任务池。
+ */
 class ThreadPool {
   public:
+    /**
+     * @brief 创建任务池并启动工作线程。
+     * @param num_threads 工作线程数量。
+     */
     ThreadPool(size_t num_threads) : stop(false) {
         for (size_t i = 0; i < num_threads; ++i) {
             workers.emplace_back([this] {
@@ -145,6 +195,9 @@ class ThreadPool {
         }
     }
 
+    /**
+     * @brief 停止任务池并等待工作线程退出。
+     */
     ~ThreadPool() {
         {
             std::unique_lock<std::mutex> lock(queue_mutex);
@@ -159,7 +212,11 @@ class ThreadPool {
         }
     }
 
-    // 添加任务到任务队列
+    /**
+     * @brief 添加任务到任务队列。
+     * @tparam F 可调用对象类型。
+     * @param f 待执行任务。
+     */
     template <class F> void enqueue(F&& f) {
         {
             std::unique_lock<std::mutex> lock(queue_mutex);

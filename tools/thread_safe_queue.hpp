@@ -1,12 +1,6 @@
 /**
  * @file thread_safe_queue.hpp
  * @brief 通用线程安全有界队列模板。
- *
- * 本文件定义 ThreadSafeQueue 模板类，基于 mutex 和 condition_variable 实现
- * 多线程安全的 push、pop、front、back、empty 和 clear 操作。
- * 主要用于线程安全有界队列，支持阻塞弹出、队列满时丢弃或回调处理。
- *
- * @namespace tools
  */
 
 #ifndef TOOLS__THREAD_SAFE_QUEUE_HPP
@@ -19,12 +13,26 @@
 #include <queue>
 
 namespace tools {
+/**
+ * @brief 通用线程安全有界队列。
+ * @tparam T 队列元素类型。
+ * @tparam PopWhenFull 队列满时是否弹出旧元素。
+ */
 template <typename T, bool PopWhenFull = false> class ThreadSafeQueue {
   public:
+    /**
+     * @brief 创建线程安全有界队列。
+     * @param max_size 队列最大容量。
+     * @param full_handler 队列满且不弹出旧元素时调用的处理函数。
+     */
     ThreadSafeQueue(
         size_t max_size, std::function<void(void)> full_handler = [] {})
         : max_size_(max_size), full_handler_(full_handler) {}
 
+    /**
+     * @brief 向队列尾部压入元素。
+     * @param value 待压入元素。
+     */
     void push(const T& value) {
         std::unique_lock<std::mutex> lock(mutex_);
 
@@ -41,6 +49,10 @@ template <typename T, bool PopWhenFull = false> class ThreadSafeQueue {
         not_empty_condition_.notify_all();
     }
 
+    /**
+     * @brief 阻塞式弹出队首元素。
+     * @param value 用于接收弹出元素的引用。
+     */
     void pop(T& value) {
         std::unique_lock<std::mutex> lock(mutex_);
 
@@ -55,6 +67,10 @@ template <typename T, bool PopWhenFull = false> class ThreadSafeQueue {
         queue_.pop();
     }
 
+    /**
+     * @brief 阻塞式弹出并返回队首元素。
+     * @return 弹出的队首元素。
+     */
     T pop() {
         std::unique_lock<std::mutex> lock(mutex_);
 
@@ -65,6 +81,10 @@ template <typename T, bool PopWhenFull = false> class ThreadSafeQueue {
         return std::move(value);
     }
 
+    /**
+     * @brief 阻塞式读取队首元素。
+     * @return 队首元素副本。
+     */
     T front() {
         std::unique_lock<std::mutex> lock(mutex_);
 
@@ -73,6 +93,10 @@ template <typename T, bool PopWhenFull = false> class ThreadSafeQueue {
         return queue_.front();
     }
 
+    /**
+     * @brief 读取队尾元素。
+     * @param value 用于接收队尾元素的引用。
+     */
     void back(T& value) {
         std::unique_lock<std::mutex> lock(mutex_);
 
@@ -84,11 +108,18 @@ template <typename T, bool PopWhenFull = false> class ThreadSafeQueue {
         value = queue_.back();
     }
 
+    /**
+     * @brief 查询队列是否为空。
+     * @return 队列为空返回 true，否则返回 false。
+     */
     bool empty() {
         std::unique_lock<std::mutex> lock(mutex_);
         return queue_.empty();
     }
 
+    /**
+     * @brief 清空队列。
+     */
     void clear() {
         std::unique_lock<std::mutex> lock(mutex_);
         while (!queue_.empty()) {

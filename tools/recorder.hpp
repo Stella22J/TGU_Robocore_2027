@@ -1,7 +1,6 @@
 /**
  * @file recorder.hpp
  * @brief 图像帧与姿态数据记录器接口声明。
- * @namespace tools
  */
 
 #ifndef TOOLS__RECORDER_HPP
@@ -15,10 +14,28 @@
 
 #include "tools/thread_safe_queue.hpp"
 namespace tools {
+/**
+ * @brief 图像帧与姿态数据记录器。
+ */
 class Recorder {
   public:
+    /**
+     * @brief 创建记录器。
+     * @param fps 输出视频帧率。
+     */
     Recorder(double fps = 30);
+
+    /**
+     * @brief 停止保存线程并释放文件资源。
+     */
     ~Recorder();
+
+    /**
+     * @brief 记录一帧图像和对应姿态。
+     * @param img 图像帧。
+     * @param q 该帧对应的姿态四元数。
+     * @param timestamp 该帧时间戳。
+     */
     void record(const cv::Mat& img, const Eigen::Quaterniond& q,
                 const std::chrono::steady_clock::time_point& timestamp);
 

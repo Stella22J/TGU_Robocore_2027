@@ -20,8 +20,6 @@ namespace multithread {
 
 /**
  * @brief 封装YOLO的OpenVINO异步推理，让图像采集、推理和控制可以并行执行
- *
- * 异步推理用于隐藏模型延迟，同时保留原始采集时间戳，避免跟踪器把推理耗时误认为目标运动
  */
 class MultiThreadDetector {
   public:

@@ -12,28 +12,20 @@
 #include <vector>
 
 namespace auto_aim {
-/**
- * @brief 视觉识别到的装甲灯颜色，用于过滤己方目标和保留裁判系统约定的特殊颜色
- */
+// 视觉识别到的装甲灯颜色，用于过滤己方目标和保留裁判系统约定的特殊颜色
 enum Color { red, blue, extinguish, purple };
 const std::vector<std::string> COLORS = {"red", "blue", "extinguish", "purple"};
 
-/**
- * @brief 装甲板物理尺寸类型，PnP必须选择正确模型才能得到可信三维位置
- */
+// 装甲板物理尺寸类型，PnP必须选择正确模型才能得到可信三维位置
 enum ArmorType { big, small };
 const std::vector<std::string> ARMOR_TYPES = {"big", "small"};
 
-/**
- * @brief 装甲板语义编号，策略决策和通信协议都用它表达目标身份
- */
+// 装甲板语义编号，策略决策和通信协议都用它表达目标身份
 enum ArmorName { one, two, three, four, five, sentry, outpost, base, not_armor };
 const std::vector<std::string> ARMOR_NAMES = {"one",    "two",     "three", "four",     "five",
                                               "sentry", "outpost", "base",  "not_armor"};
 
-/**
- * @brief 目标优先级枚举，数值越小表示越应该优先攻击
- */
+// 目标优先级枚举，数值越小表示越应该优先攻击
 enum ArmorPriority { first = 1, second, third, forth, fifth };
 
 // clang-format off
@@ -54,8 +46,6 @@ const std::vector<std::tuple<Color, ArmorName, ArmorType>> armor_properties = {
 
 /**
  * @brief 单根灯条的几何描述，传统视觉需要用它筛掉异常轮廓并组合装甲板
- *
- * 检测器同时保留原始旋转矩形和修正后的端点，是为了让灯条配对、角点修正和调试绘制都能使用同一份几何信息
  */
 struct Lightbar {
     std::size_t id;
@@ -79,8 +69,6 @@ struct Lightbar {
 
 /**
  * @brief 装甲板检测结果，保存图像位置、语义类别和位姿解算结果以贯通整条自瞄链路
- *
- * 该结构体保持接近聚合数据的形式，是因为检测、位姿解算和跟踪会分阶段补充不同字段，避免在模块之间反复转换数据
  */
 struct Armor {
     Color color;

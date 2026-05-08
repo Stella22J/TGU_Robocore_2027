@@ -1,12 +1,6 @@
 /**
  * @file extended_kalman_filter.cpp
  * @brief 扩展卡尔曼滤波器实现。
- *
- * 本文件实现 ExtendedKalmanFilter 类，提供状态预测、观测更新、协方差更新
- * 以及残差一致性统计功能。支持自定义状态转移函数、观测函数、状态增量函数
- * 和观测残差计算函数，适用于目标跟踪、位姿估计、机器人感知等场景。
- *
- * @namespace tools
  */
 
 #include "extended_kalman_filter.hpp"

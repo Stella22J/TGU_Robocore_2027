@@ -4,8 +4,6 @@
 /**
  * @file usbcamera.hpp
  * @brief 声明基于OpenCVVideoCapture的USB相机驱动。
- *
- * 该类用于接入普通V4LUSB摄像头，并提供与工业相机类似的带时间戳读取接口。
  */
 
 #include <chrono>
@@ -21,14 +19,11 @@ namespace io {
 
 /**
  * @brief USB相机驱动类。
- *
- * 使用后台采集线程持续取图，并用守护线程在读帧失败后尝试重新打开设备。
  */
 class USBCamera {
   public:
     /**
      * @brief 构造USB相机对象。
-     *
      * @param open_name 设备名，例如"video0"。
      * @param config_path TOML配置文件路径。
      */
@@ -36,25 +31,19 @@ class USBCamera {
 
     /**
      * @brief 析构USB相机对象。
-     *
-     * 析构时结束后台线程并释放VideoCapture，避免设备节点被占用。
      */
     ~USBCamera();
 
     /**
      * @brief 同步读取一帧图像。
-     *
-     * 保留该接口用于简单调试场景，正式链路优先使用带时间戳的read()。
-     *
      * @return 读取到的图像，失败时返回空Mat。
      */
     cv::Mat read();
 
     /**
      * @brief 读取一帧图像及其采集时间戳。
-     *
-     * @param[out] img 输出图像。
-     * @param[out] timestamp 图像对应的本机稳态时钟时间戳。
+     * @param img 输出图像。
+     * @param timestamp 图像对应的本机稳态时钟时间戳。
      */
     void read(cv::Mat& img, std::chrono::steady_clock::time_point& timestamp);
 
@@ -92,22 +81,16 @@ class USBCamera {
 
     /**
      * @brief 尝试打开USB相机。
-     *
-     * 打开失败只记录日志并增加计数，守护线程会决定是否继续重试。
      */
     void try_open();
 
     /**
      * @brief 打开并配置USB相机。
-     *
-     * 配置和启动采集线程集中在一个函数中，便于异常后完整恢复设备状态。
      */
     void open();
 
     /**
      * @brief 关闭USB相机。
-     *
-     * 多次调用需要安全，因为析构和异常恢复路径都会触发清理。
      */
     void close();
 };

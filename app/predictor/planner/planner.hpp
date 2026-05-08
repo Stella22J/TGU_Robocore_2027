@@ -39,8 +39,6 @@ struct Plan {
 
 /**
  * @brief 使用TinyMPC规划yaw和pitch轨迹，让云台控制更平滑并约束动态响应
- *
- * 规划器显式保留角加速度约束，是为了让云台运动更平滑，减少高速切换目标时的机械冲击
  */
 class Planner {
   public:

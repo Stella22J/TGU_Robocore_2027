@@ -4,8 +4,6 @@
 /**
  * @file imu.hpp
  * @brief 声明IMU串口驱动和姿态插值接口。
- *
- * IMU类负责从固定串口读取设备姿态，并提供按时间戳查询的四元数，便于相机帧和IMU姿态对齐。
  */
 
 #include <math.h>
@@ -26,8 +24,6 @@ namespace io {
 
 /**
  * @brief IMU串口原始接收帧。
- *
- * 使用packed保证结构体布局与设备协议一致，避免编译器padding破坏字节映射。
  */
 struct __attribute__((packed)) IMU_Receive_Frame {
     uint8_t FrameHeader1;
@@ -63,8 +59,6 @@ struct __attribute__((packed)) IMU_Receive_Frame {
 
 /**
  * @brief 解析后的IMU浮点数据。
- *
- * 设备协议直接发送float二进制表示，因此保留该中间结构便于调试原始量。
  */
 typedef struct {
     float accx;
@@ -80,30 +74,21 @@ typedef struct {
 
 /**
  * @brief IMU串口读取与姿态插值类。
- *
- * 该类在后台持续读取IMU姿态，并通过队列缓存带时间戳的四元数，供视觉模块按曝光时刻查询。
  */
 class IMU {
   public:
     /**
      * @brief 构造IMU对象。
-     *
-     * 构造阶段会等待初始两帧姿态，避免第一次插值使用未初始化缓存。
      */
     IMU();
 
     /**
      * @brief 析构IMU对象。
-     *
-     * 析构时停止接收线程并关闭串口，防止串口资源泄漏。
      */
     ~IMU();
 
     /**
      * @brief 查询指定时间戳对应的IMU姿态。
-     *
-     * 通过目标时刻前后两帧四元数做slerp，使异步IMU数据更贴近相机曝光时刻。
-     *
      * @param timestamp 目标时间戳。
      * @return 插值得到的单位四元数。
      */
@@ -117,15 +102,11 @@ class IMU {
 
     /**
      * @brief 初始化串口。
-     *
-     * 串口参数固定匹配当前IMU固件协议，启动失败时直接退出避免后续姿态不可用。
      */
     void init_serial();
 
     /**
      * @brief 后台IMU数据接收线程函数。
-     *
-     * 接收线程只负责协议解析和入队，姿态查询留给imu_at()按时间戳处理。
      */
     void get_imu_data_thread();
 

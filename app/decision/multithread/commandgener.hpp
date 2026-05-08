@@ -19,8 +19,6 @@ namespace multithread {
 
 /**
  * @brief 高频生成并发送瞄准命令，避免视觉帧率较低时下位机控制输入断续
- *
- * 命令输出与检测帧率解耦，是为了在检测较慢时仍向控制器发送高频预测结果
  */
 class CommandGener {
   public:
